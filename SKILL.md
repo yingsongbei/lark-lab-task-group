@@ -20,7 +20,7 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
 
 1. Confirm scope with the user:
    - Existing group or create a new group?
-   - Existing bot or add/invite one?
+   - Existing bot or add/invite one? The lab must provide or create the intelligent bot itself; this skill briefs the bot and wires permissions/workflow around it.
    - Should group members view only or edit the task tracker?
    - Weekly reminder time and timezone.
    - Whether messages to the group must be previewed for user approval before sending.
@@ -54,6 +54,8 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
 
 7. Brief the bot:
    - Search group bots and get the real bot open_id.
+   - If no bot exists, tell the user to create/invite one first. Options include Feishu/Lark Aily-style bots, a custom Feishu/Lark app bot, or an external agent such as Codex/Claude Code connected to Feishu/Lark through an approved bot/app integration.
+   - If the bot is expected to update the Base itself, ensure it has message-read/message-send access, Base access, and permission to edit the tracker. If not, keep it as an assistant that proposes updates for a human to confirm.
    - Draft the bot instruction message using `references/bot-brief.md`.
    - If the user has requested approval-before-send, show the draft in chat and wait for confirmation before sending.
    - Use a real mention when possible: `<at id=BOT_OPEN_ID></at>`.

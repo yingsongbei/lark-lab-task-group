@@ -25,6 +25,8 @@ lark-cli im +chat-search --as user --query "<group name>" --chat-modes group --f
 lark-cli im chat.members bots --as user --chat-id CHAT_ID --format json
 ```
 
+If no bot is returned, ask the user to create or invite a group bot first. This skill does not create a reasoning-capable bot by itself. Common choices are a Feishu/Lark Aily-style bot, a custom Feishu/Lark app bot, or an external agent connected through a compliant bot/app integration.
+
 ## Create Base
 
 Use a JSON file for complex field definitions to avoid shell escaping issues.

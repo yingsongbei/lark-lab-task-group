@@ -2,6 +2,10 @@
 
 Use this as the default group message after the Base is created. Preview it with the user before sending if the user requires approval.
 
+The bot must already exist in the group, or the user must create/invite one first. Suitable bot options include Feishu/Lark Aily-style bots, custom Feishu/Lark app bots, or external agents such as Codex/Claude Code connected through an approved Feishu/Lark bot/app integration.
+
+If the bot cannot directly edit the Base, phrase its role as proposing structured updates for a human coordinator to confirm. If it can edit the Base, still require confirmation for high-impact changes such as creating tasks, changing owners/deadlines, marking completion, or deleting records.
+
 ## Chinese Version
 
 ```text
