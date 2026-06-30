@@ -119,7 +119,7 @@ lark-cli drive permission.public patch --as user --token BASE_TOKEN --type bitab
 
 ## Add Records
 
-Use batch create after previewing rows with the user:
+Use batch create only after previewing rows with the user and receiving explicit upload/write confirmation. If the user revises the draft, render the revised table first and wait again.
 
 ```json
 {

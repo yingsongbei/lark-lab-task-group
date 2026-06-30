@@ -65,7 +65,9 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
    - Put plans/designs in `Research Plan`, not `Latest Progress`.
    - Leave `Latest Progress` empty until the work actually starts or changes.
    - Convert relative deadlines into absolute dates. For "this week" or "next week", include the Sunday date in display text and write the date field as `YYYY-MM-DD 23:59:00`.
-   - Preview rows for user approval before uploading.
+   - Always preview additions or changes as a Markdown table before touching the Base.
+   - If the user edits the draft, render the revised table again. Repeat until the user explicitly confirms upload/write.
+   - Do not create, update, delete, or change task status in the Base from a draft alone. Wait for an explicit confirmation such as "upload", "write it", "push to the board", or equivalent.
 
 9. Validate:
    - Read back Base fields, views, permissions, and sample records.
@@ -79,6 +81,7 @@ Use these default operating rules unless the user says otherwise:
 - The bot can extract proposed tasks and progress from chat.
 - The bot should ask for confirmation before creating new tasks, changing owner/deadline, marking complete, deleting records, or changing a task to/from teacher-confirmation status.
 - The student coordinator or user confirms ambiguous teacher instructions by restating task goal, owner, deadline, deliverable, and confirmation points.
+- For agent-assisted task entry, use a strict draft-first loop: draft table -> user edits -> revised table -> explicit upload confirmation -> Base write. Never skip the preview table.
 
 ## References
 

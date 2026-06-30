@@ -110,3 +110,9 @@ Use examples like these when demonstrating the template. Never include real priv
 | Decide whether to run whole-protein MS | Biochemistry | Student B | Student A | After IP-MS results | Paused | Decision note | Wait for IP-MS results before making the next submission decision. |  |  |
 | Submit single-cell sequencing samples | Biochemical Submission | Student B | Student A | TBD | Teacher Confirmation | Sequencing submission samples | Use the newly planted seedlings; coordinate with sequencing vendor. |  | Confirm sample number, tissue type, and replicate design. |
 | Subcellular fluorescence observation | Biochemistry | Student B | Student A | TBD | Not Started | Fluorescence images or observation record | Use the same seedling batch; arrange microscope access at an appropriate platform. |  |  |
+
+## Draft-First Entry Protocol
+
+Before creating or updating records in the Base, always render proposed rows as a Markdown table with the task fields. Treat this table as a draft.
+
+Do not write to the Base until the user explicitly confirms upload/write. If the user modifies the draft, render the revised table again and wait for confirmation.
