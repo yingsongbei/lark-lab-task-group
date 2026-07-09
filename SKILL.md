@@ -90,6 +90,7 @@ Use these default operating rules unless the user says otherwise:
 - The student coordinator or user confirms ambiguous teacher instructions by restating task goal, owner, deadline, deliverable, and confirmation points.
 - For agent-assisted task entry, use a strict draft-first loop: draft table -> user edits -> revised table -> explicit upload confirmation -> Base write. Never skip the preview table.
 - For confirmed updates, keep `Task Register` as the current state and append every change to `Update Log`; do not use the main task row as the long-form history archive.
+- When a task is marked `Completed`, clear the teacher-confirmation/blocker field by default so completed work does not remain in the confirmation view. Only keep or write blocker text for completed tasks when the user explicitly asks for it.
 
 ## References
 

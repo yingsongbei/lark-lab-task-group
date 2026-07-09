@@ -170,4 +170,6 @@ Use `Task Register` as the current-state table only. After a confirmed update:
 2. Add one row to `Update Log`.
 3. Link that `Update Log` row to the task.
 
+When a task status becomes `Completed` / `已完成`, clear `Teacher Confirmation / Blocker` / `卡点/需老师确认` unless the user explicitly asks to keep or add blocker text. This keeps completed tasks out of the teacher-confirmation view.
+
 This keeps the main task list readable while preserving a clickable history trail.
