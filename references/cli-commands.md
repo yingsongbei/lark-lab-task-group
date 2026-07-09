@@ -40,6 +40,50 @@ lark-cli base +base-create --as user `
   --format json
 ```
 
+## Create Update Log Table
+
+Create a second table for historical submissions. Use a bidirectional link so the main task table gets a clickable `Update Log` field.
+
+```json
+[
+  { "name": "提交标题", "type": "text" },
+  {
+    "name": "关联任务",
+    "type": "link",
+    "link_table": "TASK_TABLE_ID",
+    "bidirectional": true,
+    "bidirectional_link_field_name": "更新记录"
+  },
+  {
+    "name": "提交类型",
+    "type": "select",
+    "multiple": false,
+    "options": [
+      { "name": "新建任务" },
+      { "name": "进展更新" },
+      { "name": "状态变更" },
+      { "name": "截止时间变更" },
+      { "name": "负责人/协作人变更" },
+      { "name": "老师确认/卡点" },
+      { "name": "其他" }
+    ]
+  },
+  { "name": "提交内容", "type": "text" },
+  { "name": "更新前状态", "type": "text" },
+  { "name": "更新后状态", "type": "text" },
+  { "name": "提交人", "type": "text" },
+  { "name": "备注", "type": "text" },
+  { "name": "提交时间", "type": "created_at", "style": { "format": "yyyy-MM-dd HH:mm" } }
+]
+```
+
+```powershell
+lark-cli base +table-create --as user --base-token BASE_TOKEN `
+  --name "更新记录" `
+  --fields "@update-log-fields.json" `
+  --format json
+```
+
 ## Create Views
 
 ```powershell
@@ -159,6 +203,51 @@ Use batch create only after previewing rows with the user and receiving explicit
 ```powershell
 lark-cli base +record-batch-create --as user --base-token BASE_TOKEN --table-id TABLE_ID `
   --json "@records.json" --format json
+```
+
+## Archive Updates
+
+After a confirmed task update, update the main task row and add one linked row to `Update Log`.
+
+Update the task row:
+
+```powershell
+lark-cli base +record-batch-update --as user --base-token BASE_TOKEN --table-id TASK_TABLE_ID `
+  --json "@task-update.json" --format json
+```
+
+Create the update-log row:
+
+```json
+{
+  "fields": [
+    "提交标题",
+    "关联任务",
+    "提交类型",
+    "提交内容",
+    "更新前状态",
+    "更新后状态",
+    "提交人",
+    "备注"
+  ],
+  "rows": [
+    [
+      "更新任务进展",
+      [{ "id": "TASK_RECORD_ID" }],
+      "进展更新",
+      "本次更新的完整过程记录。",
+      "未开始",
+      "进行中",
+      "Student A",
+      null
+    ]
+  ]
+}
+```
+
+```powershell
+lark-cli base +record-batch-create --as user --base-token BASE_TOKEN --table-id UPDATE_LOG_TABLE_ID `
+  --json "@update-log-record.json" --format json
 ```
 
 ## Send Group Message

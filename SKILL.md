@@ -40,6 +40,7 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
    - Create a Base named like `<Lab/Project> Task Tracker`.
    - Create the first table named `Task Register`.
    - Use the schema in `references/base-template.md`.
+   - Add an `Update Log` table and link it back to `Task Register`, so task rows show clickable update history while the main table stays focused on current state.
    - Add categories and views exactly enough for the lab to start; avoid overbuilding.
 
 5. Configure permissions:
@@ -69,7 +70,13 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
    - If the user edits the draft, render the revised table again. Repeat until the user explicitly confirms upload/write.
    - Do not create, update, delete, or change task status in the Base from a draft alone. Wait for an explicit confirmation such as "upload", "write it", "push to the board", or equivalent.
 
-9. Validate:
+9. Archive task updates:
+   - Treat the task row as the current final state only.
+   - For every confirmed task update, update the task row to the latest state and append a linked record in `Update Log`.
+   - Link the update record to the task through the bidirectional `Update Log` / `Task` relation.
+   - Use the update record to preserve process details, previous status, new status, submitter, and context that should not clutter the main task row.
+
+10. Validate:
    - Read back Base fields, views, permissions, and sample records.
    - Summarize what was created and provide the Base URL.
 
@@ -82,6 +89,7 @@ Use these default operating rules unless the user says otherwise:
 - The bot should ask for confirmation before creating new tasks, changing owner/deadline, marking complete, deleting records, or changing a task to/from teacher-confirmation status.
 - The student coordinator or user confirms ambiguous teacher instructions by restating task goal, owner, deadline, deliverable, and confirmation points.
 - For agent-assisted task entry, use a strict draft-first loop: draft table -> user edits -> revised table -> explicit upload confirmation -> Base write. Never skip the preview table.
+- For confirmed updates, keep `Task Register` as the current state and append every change to `Update Log`; do not use the main task row as the long-form history archive.
 
 ## References
 

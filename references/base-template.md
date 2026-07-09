@@ -6,6 +6,7 @@ Use this as the default research-lab task tracker structure.
 
 - Base name: `<Project or Lab> Task Tracker`
 - Table name: `Task Register`
+- History table name: `Update Log`
 
 ## Fields
 
@@ -25,6 +26,43 @@ Create these fields in this order:
 12. `Related Materials` - text.
 13. `Created Time` - created_at.
 14. `Updated Time` - updated_at.
+15. `Update Log` - link to `Update Log`; created automatically when the update-log table uses a bidirectional link field.
+
+## Update Log Table
+
+Create a second table named `Update Log`. Use these fields:
+
+1. `Update Title` - text; primary field.
+2. `Task` - link to `Task Register`; bidirectional, with the reverse field named `Update Log`.
+3. `Update Type` - select.
+4. `Update Content` - text.
+5. `Previous Status` - text.
+6. `New Status` - text.
+7. `Submitted By` - text.
+8. `Notes` - text.
+9. `Submitted Time` - created_at, format `yyyy-MM-dd HH:mm`.
+
+Chinese field names:
+
+1. `提交标题`
+2. `关联任务`
+3. `提交类型`
+4. `提交内容`
+5. `更新前状态`
+6. `更新后状态`
+7. `提交人`
+8. `备注`
+9. `提交时间`
+
+`Update Type` / `提交类型` options:
+
+- `New Task` / `新建任务`
+- `Progress Update` / `进展更新`
+- `Status Change` / `状态变更`
+- `Deadline Change` / `截止时间变更`
+- `Owner/Collaborator Change` / `负责人/协作人变更`
+- `Teacher Confirmation / Blocker` / `老师确认/卡点`
+- `Other` / `其他`
 
 ## Select Options
 
@@ -73,7 +111,7 @@ Create these views:
 1. `Task Entry` / `任务录入表`
    - Type: grid.
    - Visible field order:
-     `Task Name`, `Task Category`, `Owner`, `Collaborators`, `Deadline`, `Status`, `Latest Progress`, `Teacher Confirmation / Blocker`, `Priority`, `Deliverable`, `Research Plan`, `Related Materials`, `Created Time`, `Updated Time`.
+     `Task Name`, `Task Category`, `Owner`, `Collaborators`, `Deadline`, `Status`, `Latest Progress`, `Update Log`, `Teacher Confirmation / Blocker`, `Priority`, `Deliverable`, `Research Plan`, `Related Materials`, `Created Time`, `Updated Time`.
 
 2. `Overview Kanban` / `总览看板`
    - Type: kanban.
@@ -89,12 +127,19 @@ Create these views:
    - Type: grid.
    - Filter: `Teacher Confirmation / Blocker` is not empty.
    - Visible field order:
-     `Task Name`, `Teacher Confirmation / Blocker`, `Owner`, `Collaborators`, `Deliverable`, `Research Plan`, `Deadline`, `Status`, `Task Category`.
+     `Task Name`, `Teacher Confirmation / Blocker`, `Owner`, `Collaborators`, `Deliverable`, `Research Plan`, `Update Log`, `Deadline`, `Status`, `Task Category`.
 
 5. `Member Workload` / `成员任务分工`
    - Type: grid.
    - Group by `Owner`.
    - Sort by `Deadline` ascending.
+
+6. `Update Log Table` / `更新记录表`
+   - Table: `Update Log`.
+   - Type: grid.
+   - Sort by `Submitted Time` / `提交时间` descending.
+   - Visible field order:
+     `Update Title`, `Task`, `Update Type`, `Update Content`, `Previous Status`, `New Status`, `Submitted By`, `Notes`, `Submitted Time`.
 
 Do not create a personal `My Tasks` view by default unless the user asks for it.
 
@@ -116,3 +161,13 @@ Use examples like these when demonstrating the template. Never include real priv
 Before creating or updating records in the Base, always render proposed rows as a Markdown table with the task fields. Treat this table as a draft.
 
 Do not write to the Base until the user explicitly confirms upload/write. If the user modifies the draft, render the revised table again and wait for confirmation.
+
+## Update Archive Protocol
+
+Use `Task Register` as the current-state table only. After a confirmed update:
+
+1. Modify the current fields in `Task Register`.
+2. Add one row to `Update Log`.
+3. Link that `Update Log` row to the task.
+
+This keeps the main task list readable while preserving a clickable history trail.
