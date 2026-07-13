@@ -102,7 +102,7 @@ Use `Status Snapshot` and `Update Source` for English trackers. CLI/bot task wri
 
 ## Create Views
 
-### Dynamic current-week, overdue, and recent-completion views
+### Dynamic current-week and recent-completion views
 
 Do not use fixed setup-week dates for a reusable `This Week` view. Create an internal formula that returns text; Boolean formula values may be rejected by the view-filter API.
 
@@ -141,12 +141,6 @@ Current-week filter:
 {"logic":"and","conditions":[["Current Week Marker","==","This Week"]]}
 ```
 
-Overdue-unfinished filter:
-
-```json
-{"logic":"and","conditions":[["Deadline","<","Today"],["Status","disjoint",["Completed"]]]}
-```
-
 Recent-completed filter:
 
 ```json
@@ -162,7 +156,7 @@ lark-cli base +view-create --as user --base-token BASE_TOKEN --table-id TABLE_ID
   --json "@views.json" --format json
 ```
 
-Include `Status-Sorted Table`, `This Week`, `Teacher Confirmation`, `Member Workload`, `Overdue Unfinished`, and `Recent 4 Weeks Completed`. Keep the `Completed` status option last and sort the status table by status, deadline, then updated time.
+Include `Status-Sorted Table`, `This Week`, `Teacher Confirmation`, `Member Workload`, and `Recent 4 Weeks Completed`. Keep the `Completed` status option last and sort the status table by status, deadline, then updated time.
 
 Set visible fields:
 

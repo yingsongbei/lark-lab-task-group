@@ -174,18 +174,13 @@ Create these views:
    - Group by `Owner`.
    - Sort by `Deadline` ascending.
 
-7. `Overdue Unfinished` / `逾期未完成`
-   - Type: grid.
-   - Filter: `Deadline < Today` and `Status` does not contain `Completed` / `已完成`.
-   - Sort by `Status`, then `Deadline` ascending, then `Updated Time` descending.
-
-8. `Recent 4 Weeks Completed` / `近四周已完成`
+7. `Recent 4 Weeks Completed` / `近四周已完成`
    - Type: grid.
    - Filter `Recent Completion Marker = Recent 4 Weeks Completed` / `近四周完成标记 = 近四周已完成`.
    - Sort by `Updated Time` descending.
    - Use this view as the completed-work input for the weekly report.
 
-9. `Update Log Table` / `更新记录表`
+8. `Update Log Table` / `更新记录表`
    - Table: `Update Log`.
    - Type: grid.
    - Sort by `Submitted Time` / `提交时间` descending.

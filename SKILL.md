@@ -25,7 +25,7 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
    - Who should retain edit access to the `Update Log` audit table? Default to the user/coordinator plus the bot or service account; ordinary members should be read-only there.
    - Weekly reminder time and timezone.
    - The weekly data-maintenance cutoff. Recommend that members update tasks continuously and, at minimum, review current-stage deadlines before the scheduled Monday report.
-   - Whether the weekly report should include `This Week`, `Overdue Unfinished`, `Teacher Confirmation`, and `Recent 4 Weeks Completed`.
+   - Whether the weekly report should include the default three views: `This Week`, `Teacher Confirmation`, and `Recent 4 Weeks Completed`.
    - The coordinator's preferred display name and stable Feishu/Lark user ID when audit records should distinguish that person from other members. Keep these values in deployment configuration, never in the reusable skill files.
    - Whether messages to the group must be previewed for user approval before sending.
 
@@ -63,7 +63,6 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
    - Implement `This Week` with the dynamic `Current Week Marker` formula and filter for the text result `This Week`. Do not use fixed `ExactDate(...)` boundaries for a reusable current-week view.
    - Define `This Week` strictly as records with an explicit deadline from Monday 00:00 inclusive to the next Monday 00:00 exclusive, with status not `Completed`. Do not infer weekly membership from `Latest Progress`, `Research Plan`, or phrases such as "finish this week".
    - Add `Recent 4 Weeks Completed` using the rolling marker; use it as the completed-work source for weekly summaries.
-   - Add `Overdue Unfinished`: deadline earlier than `Today` and status not `Completed`.
    - Hide `Current Week Marker` from every routine view after creating it. New Base fields may be added to existing views automatically; reapply each view's visible-field list and verify the kanban separately. If a kanban name-based update is a no-op, retry with real field IDs.
    - Use `Teacher Confirmation` to show records where the confirmation/callback field is not empty.
    - Use the status kanban for the overview; records that require teacher confirmation should usually have `Status = Teacher Confirmation`, so the kanban column is not empty.
@@ -100,7 +99,7 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
 
 10. Validate:
    - Read back Base fields, views, permissions, and sample records.
-   - Read records through `This Week` and `Overdue Unfinished`: the current-week view must not retain setup-week records, and the overdue view must exclude completed work.
+   - Read records through `This Week`: the current-week view must not retain setup-week records.
    - Independently validate every `This Week` record against the current timezone's Monday-to-next-Monday date range and `Status != Completed`; do not trust the view name alone.
    - Read `Recent 4 Weeks Completed` and verify it rolls with `TODAY()` rather than setup-time dates.
    - After every Workflow update, independently call workflow-get. Verify all three source branches retain their cleanup links and the workflow remains enabled; do not trust only the update response.
@@ -134,4 +133,4 @@ Read only the needed reference file:
 - `references/cli-commands.md`: lark-cli command patterns with placeholders.
 - `references/bot-brief.md`: reusable bot instruction message and weekly summary format.
 - `references/audit-workflow.md`: source-aware audit Workflow topology, attribution rules, cleanup branches, and readback validation.
-- `references/weekly-automation.md`: robust scheduled weekly-report prompt, four-view data contract, failure handling, and duplicate-send prevention.
+- `references/weekly-automation.md`: robust scheduled weekly-report prompt, three-view data contract, failure handling, and duplicate-send prevention.
