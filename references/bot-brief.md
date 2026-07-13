@@ -26,6 +26,7 @@ For scheduled reports, use `weekly-automation.md`. Replace the complete schedule
 3. 每周定时提醒和总结
 请从下一个周期开始，每周 WEEKDAY TIME 定时触发一次任务提醒与周总结。总结内容包括：本周待推进任务、进行中任务、待老师确认事项、逾期或有卡点的任务、需要大家补充进度的任务。
 周报还应包含“近四周已完成”。只有本周任务、逾期未完成、待老师确认、近四周已完成四个数据源全部读取成功后才能发群；失败时不要发送残缺周报。
+“本周任务”只列截止时间明确位于本周周一至周日、且状态不是“已完成”的任务。没有截止时间、截止时间在其他周的任务均不列入；不得从最新进展或研究计划中的“本周”等文字自行推断。读取后再次复核日期和状态。长期实验的截止时间可表示当前阶段目标日期，请提醒成员平时维护，并最迟在周报生成前完成本周日期检查。若展示周数，按当前时区的 ISO-8601 周数计算。
 
 看板链接：
 BASE_URL
@@ -75,6 +76,7 @@ For machine writes, use a generic CLI/bot source label. For manual edits, record
 3. Send weekly reminders and summaries.
 Every WEEKDAY at TIME, summarize pending tasks, in-progress tasks, teacher-confirmation items, overdue/blocker items, and tasks needing progress updates.
 Include work completed in the rolling previous four weeks. Send only after all four report views are read successfully; never send a partial report.
+The `This Week` section must contain only non-completed records with explicit deadlines in the current Monday-through-Sunday window. Exclude blank or out-of-week deadlines and never infer dates from free text. Revalidate each record after reading the view. Treat a long experiment's deadline as its current-stage commitment date, and ask members to review these dates before report generation. Use the ISO-8601 week number in the configured timezone when displaying a week number.
 
 Tracker:
 BASE_URL

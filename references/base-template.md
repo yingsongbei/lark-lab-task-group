@@ -40,6 +40,8 @@ IF(ISBLANK([Deadline]), "Not This Week", IF(AND([Deadline] >= TODAY() - WEEKDAY(
 
 For a Chinese tracker, use field `本周标记`, deadline field `截止时间`, and results `本周` / `非本周`.
 
+For research projects, interpret `Deadline` as the committed date for the task's current stage or next deliverable. It does not have to predict the end of the entire experiment. Leave it blank when no stage commitment exists, but understand that the record will not appear in `This Week`. For clearer accountability, split a long experiment into dated stage tasks.
+
 Recommended rolling completion formula:
 
 ```text
@@ -156,8 +158,9 @@ Create these views:
 
 4. `This Week` / `本周任务`
    - Type: grid.
-   - Filter `Current Week Marker = This Week` / `本周标记 = 本周`.
+   - Filter `Current Week Marker = This Week` / `本周标记 = 本周` and `Status != Completed` / `状态 != 已完成`.
    - The marker formula must calculate Monday 00:00 through the next Monday 00:00 from `TODAY()`; do not store setup-week dates in the view filter.
+   - A blank deadline is not a current-week task. Do not infer weekly membership from progress or plan text.
    - Sort by `Deadline` ascending.
 
 5. `Teacher Confirmation` / `待老师确认`

@@ -24,6 +24,7 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
    - Should group members view only or edit the task tracker?
    - Who should retain edit access to the `Update Log` audit table? Default to the user/coordinator plus the bot or service account; ordinary members should be read-only there.
    - Weekly reminder time and timezone.
+   - The weekly data-maintenance cutoff. Recommend that members update tasks continuously and, at minimum, review current-stage deadlines before the scheduled Monday report.
    - Whether the weekly report should include `This Week`, `Overdue Unfinished`, `Teacher Confirmation`, and `Recent 4 Weeks Completed`.
    - The coordinator's preferred display name and stable Feishu/Lark user ID when audit records should distinguish that person from other members. Keep these values in deployment configuration, never in the reusable skill files.
    - Whether messages to the group must be previewed for user approval before sending.
@@ -60,6 +61,7 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
    - Create the views in `references/base-template.md`.
    - Add `Status-Sorted Table` / `总表（按状态排序）`. Keep the status option order active-first and `Completed` last, so completed work does not occupy the first screen as the tracker grows.
    - Implement `This Week` with the dynamic `Current Week Marker` formula and filter for the text result `This Week`. Do not use fixed `ExactDate(...)` boundaries for a reusable current-week view.
+   - Define `This Week` strictly as records with an explicit deadline from Monday 00:00 inclusive to the next Monday 00:00 exclusive, with status not `Completed`. Do not infer weekly membership from `Latest Progress`, `Research Plan`, or phrases such as "finish this week".
    - Add `Recent 4 Weeks Completed` using the rolling marker; use it as the completed-work source for weekly summaries.
    - Add `Overdue Unfinished`: deadline earlier than `Today` and status not `Completed`.
    - Hide `Current Week Marker` from every routine view after creating it. New Base fields may be added to existing views automatically; reapply each view's visible-field list and verify the kanban separately. If a kanban name-based update is a no-op, retry with real field IDs.
@@ -80,6 +82,7 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
    - Put plans/designs in `Research Plan`, not `Latest Progress`.
    - Leave `Latest Progress` empty until the work actually starts or changes.
    - Convert relative deadlines into absolute dates. For "this week" or "next week", include the Sunday date in display text and write the date field as `YYYY-MM-DD 23:59:00`.
+   - For long-running experiments, treat `Deadline` as the current stage's committed completion date, not necessarily the predicted end date of the entire experiment. When useful, split a long experiment into a dated stage task or next action. A task without an explicit current-week deadline remains in the main tracker but is excluded from `This Week`.
    - Always preview additions or changes as a Markdown table before touching the Base.
    - If the user edits the draft, render the revised table again. Repeat until the user explicitly confirms upload/write.
    - Do not create, update, delete, or change task status in the Base from a draft alone. Wait for an explicit confirmation such as "upload", "write it", "push to the board", or equivalent.
@@ -98,6 +101,7 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
 10. Validate:
    - Read back Base fields, views, permissions, and sample records.
    - Read records through `This Week` and `Overdue Unfinished`: the current-week view must not retain setup-week records, and the overdue view must exclude completed work.
+   - Independently validate every `This Week` record against the current timezone's Monday-to-next-Monday date range and `Status != Completed`; do not trust the view name alone.
    - Read `Recent 4 Weeks Completed` and verify it rolls with `TODAY()` rather than setup-time dates.
    - After every Workflow update, independently call workflow-get. Verify all three source branches retain their cleanup links and the workflow remains enabled; do not trust only the update response.
    - Scan all skill files before sharing. Reject real names, usernames, open IDs, Base/table/view/workflow tokens, unpublished identifiers, and institution-specific details.
@@ -118,6 +122,9 @@ Use these default operating rules unless the user says otherwise:
 - Keep audit attribution source-aware: machine writes use a generic CLI/bot label; human writes use the person's display name. Never publish account aliases or stable IDs in reusable templates.
 - Every audit branch must finish by syncing `Status Snapshot` and clearing `Update Source`, including CLI writes and the coordinator's own edits.
 - When a task is marked `Completed`, clear the teacher-confirmation/blocker field by default so completed work does not remain in the confirmation view. Only keep or write blocker text for completed tasks when the user explicitly asks for it.
+- Ask members to maintain progress and current-stage deadlines during normal work. At minimum, run a deadline review before the scheduled weekly report; tasks intended for completion that week should receive an explicit date in that week.
+- The weekly report's `This Week` section contains only non-completed tasks with explicit deadlines in the current Monday-through-Sunday window. Never substitute all open or in-progress tasks, and never infer dates from free text.
+- If the report prints a week number, calculate the ISO-8601 week from the report date in the configured timezone. Do not reuse the previous reporting period's week number.
 
 ## References
 
