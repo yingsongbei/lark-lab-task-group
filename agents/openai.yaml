@@ -1,4 +1,4 @@
 interface:
   display_name: "Lark Lab Task Group"
-  short_description: "Build a Feishu/Lark lab task group and Base tracker."
-  default_prompt: "Use $lark-lab-task-group to set up a Feishu/Lark group, task Base, views, permissions, and bot workflow for a research lab."
+  short_description: "Build a Feishu/Lark lab tracker with audit logs and weekly reports."
+  default_prompt: "Use $lark-lab-task-group to set up a Feishu/Lark research group, task Base, source-aware update log, views, permissions, and robust weekly bot report."

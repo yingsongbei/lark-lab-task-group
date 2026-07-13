@@ -84,21 +84,25 @@ lark-cli base +table-create --as user --base-token BASE_TOKEN `
   --format json
 ```
 
-## Add Audit Snapshot Field
+## Add Audit Internal Fields
 
-If direct edits to the task table should automatically create update-history rows, add an internal snapshot field to the task table. Hide this field from routine views.
+If direct edits to the task table should automatically create update-history rows, add internal snapshot and source fields. Hide both from every routine view.
 
 ```powershell
 lark-cli base +field-create --as user --base-token BASE_TOKEN --table-id TASK_TABLE_ID `
   --json '{"name":"状态快照","type":"text"}' `
   --format json
+
+lark-cli base +field-create --as user --base-token BASE_TOKEN --table-id TASK_TABLE_ID `
+  --json '{"name":"更新来源","type":"text"}' `
+  --format json
 ```
 
-Use `Status Snapshot` instead of `状态快照` for English trackers.
+Use `Status Snapshot` and `Update Source` for English trackers. CLI/bot task writes set the source field to a generic machine label; human edits leave it empty.
 
 ## Create Views
 
-### Dynamic current-week and overdue views
+### Dynamic current-week, overdue, and recent-completion views
 
 Do not use fixed setup-week dates for a reusable `This Week` view. Create an internal formula that returns text; Boolean formula values may be rejected by the view-filter API.
 
@@ -118,6 +122,19 @@ lark-cli base +field-create --as user --base-token BASE_TOKEN --table-id TABLE_I
 
 For a Chinese tracker, use `本周标记`, `[截止时间]`, `本周`, and `非本周`.
 
+Create a second text-returning formula for the rolling completed view:
+
+```json
+{
+  "name": "Recent Completion Marker",
+  "type": "formula",
+  "description": "Internal field used by the rolling four-week completed view.",
+  "expression": "IF(AND([Status] = \"Completed\", NOT(ISBLANK([Updated Time])), [Updated Time] >= TODAY() - 28), \"Recent 4 Weeks Completed\", \"Other\")"
+}
+```
+
+For a Chinese tracker, use `近四周完成标记`, `[状态]`, `[更新时间]`, `近四周已完成`, and `其他`.
+
 Current-week filter:
 
 ```json
@@ -130,7 +147,13 @@ Overdue-unfinished filter:
 {"logic":"and","conditions":[["Deadline","<","Today"],["Status","disjoint",["Completed"]]]}
 ```
 
-After creating the formula field, reapply visible-field lists to all routine views so the internal marker stays hidden. Verify kanban separately; when a name-based visible-field update returns a no-op, retry with real field IDs from `+field-list`.
+Recent-completed filter:
+
+```json
+{"logic":"and","conditions":[["Recent Completion Marker","==","Recent 4 Weeks Completed"]]}
+```
+
+After creating internal fields, reapply visible-field lists to all routine views so `Status Snapshot`, `Update Source`, `Current Week Marker`, and `Recent Completion Marker` stay hidden. Verify kanban separately; when a name-based visible-field update returns a no-op, retry with real field IDs from `+field-list`.
 
 ```powershell
 lark-cli base +view-rename --as user --base-token BASE_TOKEN --table-id TABLE_ID --view-id DEFAULT_VIEW_ID --name "Task Entry"
@@ -138,6 +161,8 @@ lark-cli base +view-rename --as user --base-token BASE_TOKEN --table-id TABLE_ID
 lark-cli base +view-create --as user --base-token BASE_TOKEN --table-id TABLE_ID `
   --json "@views.json" --format json
 ```
+
+Include `Status-Sorted Table`, `This Week`, `Teacher Confirmation`, `Member Workload`, `Overdue Unfinished`, and `Recent 4 Weeks Completed`. Keep the `Completed` status option last and sort the status table by status, deadline, then updated time.
 
 Set visible fields:
 
@@ -271,78 +296,13 @@ If the current CLI or tenant cannot assign role members, finish membership assig
 
 ## Create Automatic Update-Log Workflow
 
-Use this when ordinary members may directly edit `任务总表`. First read real field IDs with `+field-list`; Workflow `ref` paths use field IDs such as `$.task_changed.fldXXXX`, not field names.
+Use this when ordinary members may directly edit `任务总表`. Read `audit-workflow.md` before building the steps. First read real field IDs with `+field-list`; Workflow `ref` paths use field IDs such as `$.trigger_task_change.fldXXXX`, not field names.
 
 ```powershell
 lark-cli base +field-list --as user --base-token BASE_TOKEN --table-id TASK_TABLE_ID --format json
 ```
 
-Workflow skeleton:
-
-```json
-{
-  "client_token": "UNIQUE_CLIENT_TOKEN",
-  "title": "任务总表变更自动写入更新记录",
-  "status": "Enabled",
-  "steps": [
-    {
-      "id": "task_changed",
-      "type": "SetRecordTrigger",
-      "title": "任务总表关键字段变更",
-      "next": "add_update_log",
-      "data": {
-        "table_name": "任务总表",
-        "record_watch_conjunction": "and",
-        "record_watch_info": [],
-        "field_watch_info": [
-          { "field_name": "状态" },
-          { "field_name": "最新进展" },
-          { "field_name": "卡点/需老师确认" },
-          { "field_name": "负责人" },
-          { "field_name": "协作人" },
-          { "field_name": "截止时间" },
-          { "field_name": "交付物" },
-          { "field_name": "研究计划" }
-        ],
-        "trigger_control_list": [],
-        "condition_list": null
-      }
-    },
-    {
-      "id": "add_update_log",
-      "type": "AddRecordAction",
-      "title": "写入更新记录",
-      "next": "sync_status_snapshot",
-      "data": {
-        "table_name": "更新记录",
-        "field_values": [
-          { "field_name": "提交标题", "value": [{ "value_type": "text", "value": "任务总表自动更新记录" }] },
-          { "field_name": "关联任务", "value": [{ "value_type": "ref", "value": "$.task_changed.recordId" }] },
-          { "field_name": "提交类型", "value": [{ "value_type": "option", "value": { "name": "进展更新" } }] },
-          { "field_name": "提交内容", "value": [{ "value_type": "text", "value": "任务总表关键字段发生变更，已自动归档。" }] },
-          { "field_name": "更新前状态", "value": [{ "value_type": "ref", "value": "$.task_changed.STATUS_SNAPSHOT_FIELD_ID" }] },
-          { "field_name": "更新后状态", "value": [{ "value_type": "ref", "value": "$.task_changed.STATUS_FIELD_ID" }] },
-          { "field_name": "提交人", "value": [{ "value_type": "ref", "value": "$.task_changed.recordModifiedUser" }] },
-          { "field_name": "备注", "value": [{ "value_type": "text", "value": "由 Base Workflow 自动生成。" }] }
-        ]
-      }
-    },
-    {
-      "id": "sync_status_snapshot",
-      "type": "SetRecordAction",
-      "title": "同步状态快照",
-      "next": null,
-      "data": {
-        "table_name": "任务总表",
-        "ref_info": { "step_id": "task_changed" },
-        "field_values": [
-          { "field_name": "状态快照", "value": [{ "value_type": "ref", "value": "$.task_changed.STATUS_FIELD_ID" }] }
-        ]
-      }
-    }
-  ]
-}
-```
+Build three attribution paths: machine source, configured coordinator, and other member. Give each path its own cleanup `SetRecordAction` that syncs `状态快照` and clears `更新来源`. Do not point nested branches at one shared cleanup node; the service may silently remove those links.
 
 Create and enable the workflow:
 
@@ -354,7 +314,17 @@ lark-cli base +workflow-enable --as user --base-token BASE_TOKEN --workflow-id W
   --yes --format json
 ```
 
-Important: test by editing one non-sensitive sample task. If bot/API/CLI writes do not trigger Workflow in this tenant, make the bot/API/CLI update path append a linked `更新记录` row itself.
+For an existing workflow, read it first and use full-replacement update semantics:
+
+```powershell
+lark-cli base +workflow-get --as user --base-token BASE_TOKEN --workflow-id WORKFLOW_ID --format json
+lark-cli base +workflow-update --as user --base-token BASE_TOKEN --workflow-id WORKFLOW_ID `
+  --json "@task-update-audit-workflow.json" --format json
+```
+
+Important: test by editing one non-sensitive sample task. If bot/API/CLI writes do not trigger Workflow in this tenant, make that path append a linked `更新记录` row, sync the status snapshot, and clear the source marker in the same confirmed operation.
+
+After create/update, independently run `+workflow-get`. Verify the workflow remains enabled and all three log actions still point to their own cleanup actions. Do not rely only on the update response.
 
 ## Add Records
 

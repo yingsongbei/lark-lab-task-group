@@ -24,11 +24,13 @@ Create these fields in this order:
 10. `Deliverable` - text.
 11. `Research Plan` - text.
 12. `Related Materials` - text.
-13. `Created Time` - created_at.
-14. `Updated Time` - updated_at.
-15. `Update Log` - link to `Update Log`; created automatically when the update-log table uses a bidirectional link field.
+13. `Update Log` - link to `Update Log`; created automatically when the update-log table uses a bidirectional link field.
+14. `Created Time` - created_at.
+15. `Updated Time` - updated_at.
 16. `Status Snapshot` - text; internal field for audit workflow only. Hide it from routine views.
-17. `Current Week Marker` - formula returning text; internal field for the dynamic current-week view. Hide it from routine views.
+17. `Update Source` - text; internal machine-write marker for source-aware audit logging. Hide it from routine views.
+18. `Current Week Marker` - formula returning text; internal field for the dynamic current-week view. Hide it from routine views.
+19. `Recent Completion Marker` - formula returning text; internal field for the rolling four-week completed view. Hide it from routine views.
 
 Recommended English formula:
 
@@ -37,6 +39,14 @@ IF(ISBLANK([Deadline]), "Not This Week", IF(AND([Deadline] >= TODAY() - WEEKDAY(
 ```
 
 For a Chinese tracker, use field `本周标记`, deadline field `截止时间`, and results `本周` / `非本周`.
+
+Recommended rolling completion formula:
+
+```text
+IF(AND([Status] = "Completed", NOT(ISBLANK([Updated Time])), [Updated Time] >= TODAY() - 28), "Recent 4 Weeks Completed", "Other")
+```
+
+For a Chinese tracker, use fields `状态` and `更新时间`, and results `近四周已完成` / `其他`. This view treats the task's latest update time as the completion activity time; teams that need a legally strict completion timestamp should add a dedicated `Completed Time` field instead.
 
 ## Update Log Table
 
@@ -85,8 +95,13 @@ Chinese field names:
 - `Meeting`
 - `Misc`
 - `Seedling / Hydroponics`
+- `Seedling / Soil`
 - `Biochemical Submission`
 - `Biochemistry`
+- `System Setup`
+- `Identification`
+- `Mailing`
+- `Learning`
 
 For Chinese teams, use:
 
@@ -97,16 +112,21 @@ For Chinese teams, use:
 - `会议`
 - `杂事`
 - `种苗（水培）`
+- `种苗（土培）`
 - `生化送测`
 - `生化`
+- `体系搭建`
+- `鉴定`
+- `邮寄`
+- `学习`
 
 `Status`:
 
 - `Not Started` / `未开始`
 - `In Progress` / `进行中`
 - `Teacher Confirmation` / `待老师确认`
-- `Completed` / `已完成`
 - `Paused` / `暂缓`
+- `Completed` / `已完成`
 
 `Priority`:
 
@@ -121,23 +141,24 @@ Create these views:
 1. `Task Entry` / `任务录入表`
    - Type: grid.
    - Visible field order:
-     `Task Name`, `Task Category`, `Owner`, `Collaborators`, `Deadline`, `Status`, `Latest Progress`, `Update Log`, `Teacher Confirmation / Blocker`, `Priority`, `Deliverable`, `Research Plan`, `Related Materials`, `Created Time`, `Updated Time`.
+     `Task Name`, `Task Category`, `Owner`, `Collaborators`, `Deadline`, `Status`, `Latest Progress`, `Teacher Confirmation / Blocker`, `Priority`, `Deliverable`, `Research Plan`, `Related Materials`, `Update Log`, `Created Time`, `Updated Time`.
 
-2. `Overview Kanban` / `总览看板`
+2. `Status-Sorted Table` / `总表（按状态排序）`
+   - Type: grid.
+   - Sort by `Status` ascending, `Deadline` ascending, then `Updated Time` descending.
+   - Keep the status-option order `Not Started`, `In Progress`, `Teacher Confirmation`, `Paused`, `Completed`, so completed work appears last.
+
+3. `Overview Kanban` / `总览看板`
    - Type: kanban.
    - Group by `Status`.
+   - Keep the `Completed` group last.
    - If a record has teacher-confirmation content, set `Status` to `Teacher Confirmation` so this column is populated.
 
-3. `This Week` / `本周任务`
+4. `This Week` / `本周任务`
    - Type: grid.
    - Filter `Current Week Marker = This Week` / `本周标记 = 本周`.
    - The marker formula must calculate Monday 00:00 through the next Monday 00:00 from `TODAY()`; do not store setup-week dates in the view filter.
    - Sort by `Deadline` ascending.
-
-4. `Overdue Unfinished` / `逾期未完成`
-   - Type: grid.
-   - Filter: `Deadline < Today` and `Status` does not contain `Completed` / `已完成`.
-   - Sort by `Status`, then `Deadline` ascending, then `Updated Time` descending.
 
 5. `Teacher Confirmation` / `待老师确认`
    - Type: grid.
@@ -150,7 +171,18 @@ Create these views:
    - Group by `Owner`.
    - Sort by `Deadline` ascending.
 
-7. `Update Log Table` / `更新记录表`
+7. `Overdue Unfinished` / `逾期未完成`
+   - Type: grid.
+   - Filter: `Deadline < Today` and `Status` does not contain `Completed` / `已完成`.
+   - Sort by `Status`, then `Deadline` ascending, then `Updated Time` descending.
+
+8. `Recent 4 Weeks Completed` / `近四周已完成`
+   - Type: grid.
+   - Filter `Recent Completion Marker = Recent 4 Weeks Completed` / `近四周完成标记 = 近四周已完成`.
+   - Sort by `Updated Time` descending.
+   - Use this view as the completed-work input for the weekly report.
+
+9. `Update Log Table` / `更新记录表`
    - Table: `Update Log`.
    - Type: grid.
    - Sort by `Submitted Time` / `提交时间` descending.
@@ -165,6 +197,13 @@ Do not create a personal `My Tasks` view by default unless the user asks for it.
 - Make the formula return text instead of Boolean. The Base view-filter API accepts a single string or number for formula fields, but may reject a Boolean filter value.
 - After creating the internal marker, explicitly restore visible fields for all routine views because Base may auto-add new fields to existing views.
 - Verify kanban visibility separately. If setting kanban visible fields by name produces a no-op, submit the same list with real field IDs.
+- Apply the same hide-and-verify pass to `Update Source`, `Status Snapshot`, and `Recent Completion Marker`.
+
+### Completed-Last View Rule
+
+- Keep an all-task grid sorted by status, deadline, and latest update so active work stays at the top and `Completed` remains last.
+- Do not rely on creation order. Confirm the status-option order or use a dedicated sort key when the tenant does not respect select-option order.
+- Keep completed tasks accessible through `Recent 4 Weeks Completed` and the overview kanban instead of allowing them to dominate the first screen.
 
 ## Permission Model
 
@@ -183,23 +222,11 @@ If the CLI cannot assign every role member in the current tenant, create the rol
 
 When members are allowed to edit `Task Register` directly, configure a Base Workflow so manual changes still create update history.
 
-Recommended workflow:
+Use the source-aware topology in `audit-workflow.md`. It distinguishes CLI/bot writes, the configured coordinator's manual edits, and other members' manual edits. Every branch must use its own cleanup action to sync `Status Snapshot` and clear `Update Source`; independently read the saved workflow back because nested branches may silently discard a shared cleanup node.
 
-1. Trigger: record changed in `Task Register`.
-2. Watched fields: `Status`, `Latest Progress`, `Teacher Confirmation / Blocker`, `Owner`, `Collaborators`, `Deadline`, `Deliverable`, `Research Plan`, and other fields the user cares about.
-3. Action 1: add one record to `Update Log`.
-   - `Task`: link to the changed task record.
-   - `Update Type`: usually `Progress Update` or `Status Change`; use a generic value if the workflow cannot branch.
-   - `Update Content`: summarize the changed task name and changed fields.
-   - `Previous Status`: read from `Status Snapshot`.
-   - `New Status`: read from current `Status`.
-   - `Submitted By`: use the record modifier if available; otherwise write `Workflow` or the bot/service account name.
-   - `Notes`: include that the row was generated automatically when helpful.
-4. Action 2: update the changed `Task Register` row and set `Status Snapshot` to the current `Status`.
+Hide `Status Snapshot` and `Update Source` from `Task Entry`, `Status-Sorted Table`, `Overview Kanban`, `Teacher Confirmation`, `Member Workload`, and every other routine view.
 
-Hide `Status Snapshot` from `Task Entry`, `Overview Kanban`, `Teacher Confirmation`, `Member Workload`, and other routine views. It exists only so the next workflow run can know the previous status.
-
-Important fallback: if bot/API/CLI writes do not trigger Workflow in the user's tenant, the bot/API/CLI path must create the linked `Update Log` record itself in the same confirmed operation.
+Important fallback: if bot/API/CLI writes do not trigger Workflow in the user's tenant, the bot/API/CLI path must create the linked `Update Log` row, sync the snapshot, and clear the source marker in the same confirmed operation.
 
 ## Anonymous Example Rows
 

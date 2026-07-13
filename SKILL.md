@@ -24,6 +24,8 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
    - Should group members view only or edit the task tracker?
    - Who should retain edit access to the `Update Log` audit table? Default to the user/coordinator plus the bot or service account; ordinary members should be read-only there.
    - Weekly reminder time and timezone.
+   - Whether the weekly report should include `This Week`, `Overdue Unfinished`, `Teacher Confirmation`, and `Recent 4 Weeks Completed`.
+   - The coordinator's preferred display name and stable Feishu/Lark user ID when audit records should distinguish that person from other members. Keep these values in deployment configuration, never in the reusable skill files.
    - Whether messages to the group must be previewed for user approval before sending.
 
 2. Prepare Feishu/Lark CLI:
@@ -43,7 +45,9 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
    - Use the schema in `references/base-template.md`.
    - Add an `Update Log` table and link it back to `Task Register`, so task rows show clickable update history while the main table stays focused on current state.
    - Add an internal `Status Snapshot` field to `Task Register` when automatic audit logging is enabled; hide it from routine views.
+   - Add an internal `Update Source` text field when CLI/bot writes must be distinguished from manual edits; hide it from every routine view.
    - Add an internal text-returning formula field such as `Current Week Marker` when the tracker includes a current-week view. Use `TODAY()` and `WEEKDAY()` so the marker moves automatically each week; never freeze the view to setup-week dates.
+   - Add a text-returning `Recent Completion Marker` formula when weekly reports need a rolling four-week completed view.
    - Add categories and views exactly enough for the lab to start; avoid overbuilding.
 
 5. Configure permissions:
@@ -54,7 +58,9 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
 
 6. Configure views:
    - Create the views in `references/base-template.md`.
+   - Add `Status-Sorted Table` / `总表（按状态排序）`. Keep the status option order active-first and `Completed` last, so completed work does not occupy the first screen as the tracker grows.
    - Implement `This Week` with the dynamic `Current Week Marker` formula and filter for the text result `This Week`. Do not use fixed `ExactDate(...)` boundaries for a reusable current-week view.
+   - Add `Recent 4 Weeks Completed` using the rolling marker; use it as the completed-work source for weekly summaries.
    - Add `Overdue Unfinished`: deadline earlier than `Today` and status not `Completed`.
    - Hide `Current Week Marker` from every routine view after creating it. New Base fields may be added to existing views automatically; reapply each view's visible-field list and verify the kanban separately. If a kanban name-based update is a no-op, retry with real field IDs.
    - Use `Teacher Confirmation` to show records where the confirmation/callback field is not empty.
@@ -65,6 +71,7 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
    - If no bot exists, tell the user to create/invite one first. Options include Feishu/Lark Aily-style bots, a custom Feishu/Lark app bot, or an external agent such as Codex/Claude Code connected to Feishu/Lark through an approved bot/app integration.
    - If the bot is expected to update the Base itself, ensure it has message-read/message-send access, Base access, and permission to edit the tracker. If not, keep it as an assistant that proposes updates for a human to confirm.
    - Draft the bot instruction message using `references/bot-brief.md`.
+   - For a scheduled weekly report, read `references/weekly-automation.md`. Replace the whole scheduled prompt in one operation, use direct executable instructions and full CLI flags, and never send a partial prompt assembled across multiple chat messages.
    - If the user has requested approval-before-send, show the draft in chat and wait for confirmation before sending.
    - Use a real mention when possible: `<at id=BOT_OPEN_ID></at>`.
 
@@ -82,12 +89,18 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
    - For every confirmed task update, update the task row to the latest state and append a linked record in `Update Log`.
    - Link the update record to the task through the bidirectional `Update Log` / `Task` relation.
    - Use the update record to preserve process details, previous status, new status, submitter, and context that should not clutter the main task row.
-   - When the team will edit `Task Register` directly, configure a Base Workflow automation: on watched-field changes in `Task Register`, append a linked row to `Update Log`, then sync `Status Snapshot` to the current status. Use `Status Snapshot` as the previous-status source for the next audit row.
+   - When the team will edit `Task Register` directly, configure the source-aware Base Workflow in `references/audit-workflow.md`: append a linked row to `Update Log`, attribute it to CLI/bot or the actual human editor, then sync `Status Snapshot` and clear `Update Source`.
+   - For every CLI/bot task write, set `Update Source` to the configured machine-source label in the same patch. Human edits must not set that field.
+   - Use three independent cleanup actions after the CLI, coordinator, and other-member branches. Nested Feishu/Lark branches may discard a shared cleanup node even when an update response echoes the requested links.
+   - Display `Feishu CLI` / `Lark CLI` for CLI writes, the configured coordinator display name for that coordinator's manual edits, and the actual modifier for other manual edits. Do not expose numeric account aliases or internal IDs in user-facing log fields.
    - If bot/API writes do not trigger the Base Workflow in that tenant, the bot/API update must create the `Update Log` row in the same confirmed operation.
 
 10. Validate:
    - Read back Base fields, views, permissions, and sample records.
    - Read records through `This Week` and `Overdue Unfinished`: the current-week view must not retain setup-week records, and the overdue view must exclude completed work.
+   - Read `Recent 4 Weeks Completed` and verify it rolls with `TODAY()` rather than setup-time dates.
+   - After every Workflow update, independently call workflow-get. Verify all three source branches retain their cleanup links and the workflow remains enabled; do not trust only the update response.
+   - Scan all skill files before sharing. Reject real names, usernames, open IDs, Base/table/view/workflow tokens, unpublished identifiers, and institution-specific details.
    - Summarize what was created and provide the Base URL.
 
 ## Update Rules
@@ -102,6 +115,8 @@ Use these default operating rules unless the user says otherwise:
 - For confirmed updates, keep `Task Register` as the current state and append every change to `Update Log`; do not use the main task row as the long-form history archive.
 - Treat `Update Log` as an audit table. Do not ask ordinary members to edit it directly; protect it with read-only permissions where possible. Only the user/coordinator, named maintainers, and the bot/service account should write or repair log rows.
 - If direct edits to `Task Register` are allowed, enable automatic audit logging through Base Workflow; otherwise ensure every bot or CLI task update also appends a linked `Update Log` record.
+- Keep audit attribution source-aware: machine writes use a generic CLI/bot label; human writes use the person's display name. Never publish account aliases or stable IDs in reusable templates.
+- Every audit branch must finish by syncing `Status Snapshot` and clearing `Update Source`, including CLI writes and the coordinator's own edits.
 - When a task is marked `Completed`, clear the teacher-confirmation/blocker field by default so completed work does not remain in the confirmation view. Only keep or write blocker text for completed tasks when the user explicitly asks for it.
 
 ## References
@@ -111,3 +126,5 @@ Read only the needed reference file:
 - `references/base-template.md`: Base table fields, category options, view order, and example anonymous rows.
 - `references/cli-commands.md`: lark-cli command patterns with placeholders.
 - `references/bot-brief.md`: reusable bot instruction message and weekly summary format.
+- `references/audit-workflow.md`: source-aware audit Workflow topology, attribution rules, cleanup branches, and readback validation.
+- `references/weekly-automation.md`: robust scheduled weekly-report prompt, four-view data contract, failure handling, and duplicate-send prevention.
