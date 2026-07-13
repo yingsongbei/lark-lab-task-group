@@ -1,5 +1,7 @@
 # lark-lab-task-group
 
+[中文](README.md) | [English](README_EN.md)
+
 一个用于科研团队的 Codex Skill：从 0 到 1 搭建飞书 / Lark 实验室任务群、任务看板、多维表格视图、群权限和机器人工作规则。
 
 它适合学生-导师课题组、湿实验团队、样品送测协作、种苗/实验计划管理、多人进度同步等场景。
@@ -300,6 +302,7 @@ lark-cli doctor
 lark-lab-task-group/
   SKILL.md
   README.md
+  README_EN.md
   agents/
     openai.yaml
   references/
