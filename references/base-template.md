@@ -27,6 +27,7 @@ Create these fields in this order:
 13. `Created Time` - created_at.
 14. `Updated Time` - updated_at.
 15. `Update Log` - link to `Update Log`; created automatically when the update-log table uses a bidirectional link field.
+16. `Status Snapshot` - text; internal field for audit workflow only. Hide it from routine views.
 
 ## Update Log Table
 
@@ -143,6 +144,41 @@ Create these views:
 
 Do not create a personal `My Tasks` view by default unless the user asks for it.
 
+## Permission Model
+
+Ask the user who should keep edit access to the audit table before configuring advanced permissions.
+
+Default model:
+
+1. `Task Register`: ordinary group members may edit if the lab wants direct progress updates.
+2. `Update Log`: ordinary group members are read-only.
+3. `Update Log` write access: keep only for the Base owner, the student/lab coordinator, named maintainers, and the bot or service account that writes audit rows.
+4. Public link sharing: use tenant-only access by default and disable external sharing unless the user explicitly asks otherwise.
+
+If the CLI cannot assign every role member in the current tenant, create the roles and table permissions with CLI where possible, then clearly tell the user which people or bots must be assigned in the Feishu/Lark UI.
+
+## Automatic Audit Workflow
+
+When members are allowed to edit `Task Register` directly, configure a Base Workflow so manual changes still create update history.
+
+Recommended workflow:
+
+1. Trigger: record changed in `Task Register`.
+2. Watched fields: `Status`, `Latest Progress`, `Teacher Confirmation / Blocker`, `Owner`, `Collaborators`, `Deadline`, `Deliverable`, `Research Plan`, and other fields the user cares about.
+3. Action 1: add one record to `Update Log`.
+   - `Task`: link to the changed task record.
+   - `Update Type`: usually `Progress Update` or `Status Change`; use a generic value if the workflow cannot branch.
+   - `Update Content`: summarize the changed task name and changed fields.
+   - `Previous Status`: read from `Status Snapshot`.
+   - `New Status`: read from current `Status`.
+   - `Submitted By`: use the record modifier if available; otherwise write `Workflow` or the bot/service account name.
+   - `Notes`: include that the row was generated automatically when helpful.
+4. Action 2: update the changed `Task Register` row and set `Status Snapshot` to the current `Status`.
+
+Hide `Status Snapshot` from `Task Entry`, `Overview Kanban`, `Teacher Confirmation`, `Member Workload`, and other routine views. It exists only so the next workflow run can know the previous status.
+
+Important fallback: if bot/API/CLI writes do not trigger Workflow in the user's tenant, the bot/API/CLI path must create the linked `Update Log` record itself in the same confirmed operation.
+
 ## Anonymous Example Rows
 
 Use examples like these when demonstrating the template. Never include real private names or unpublished biological identifiers.
@@ -173,3 +209,5 @@ Use `Task Register` as the current-state table only. After a confirmed update:
 When a task status becomes `Completed` / `已完成`, clear `Teacher Confirmation / Blocker` / `卡点/需老师确认` unless the user explicitly asks to keep or add blocker text. This keeps completed tasks out of the teacher-confirmation view.
 
 This keeps the main task list readable while preserving a clickable history trail.
+
+For direct manual edits in `Task Register`, prefer the automatic audit workflow above so the log is not dependent on everyone remembering to write a second row manually.

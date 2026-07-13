@@ -84,6 +84,18 @@ lark-cli base +table-create --as user --base-token BASE_TOKEN `
   --format json
 ```
 
+## Add Audit Snapshot Field
+
+If direct edits to the task table should automatically create update-history rows, add an internal snapshot field to the task table. Hide this field from routine views.
+
+```powershell
+lark-cli base +field-create --as user --base-token BASE_TOKEN --table-id TASK_TABLE_ID `
+  --json '{"name":"状态快照","type":"text"}' `
+  --format json
+```
+
+Use `Status Snapshot` instead of `状态快照` for English trackers.
+
 ## Create Views
 
 ```powershell
@@ -160,6 +172,155 @@ Conservative public permission:
 lark-cli drive permission.public patch --as user --token BASE_TOKEN --type bitable `
   --data "@public-permission.json" --yes --format json
 ```
+
+## Protect Update Log With Advanced Permissions
+
+Before configuring advanced permissions, ask the user which people and bots should retain edit access to `Update Log` / `更新记录`.
+
+Recommended default:
+
+- `Task Register` / `任务总表`: group members can edit if direct progress updates are expected.
+- `Update Log` / `更新记录`: ordinary members are read-only.
+- Update-log writers: Base owner, student/lab coordinator, named maintainers, and the bot or service account.
+
+Enable advanced permissions:
+
+```powershell
+lark-cli base +advperm-enable --as user --base-token BASE_TOKEN --format json
+```
+
+List and inspect roles before changing them:
+
+```powershell
+lark-cli base +role-list --as user --base-token BASE_TOKEN --format json
+lark-cli base +role-get --as user --base-token BASE_TOKEN --role-id ROLE_ID --format json
+```
+
+For an ordinary-member role, allow task-table editing but make the update-log table read-only:
+
+```json
+{
+  "role_name": "Lab Member",
+  "role_type": "custom_role",
+  "table_rule_map": {
+    "任务总表": { "perm": "edit" },
+    "更新记录": { "perm": "read_only" }
+  }
+}
+```
+
+```powershell
+lark-cli base +role-update --as user --base-token BASE_TOKEN --role-id MEMBER_ROLE_ID `
+  --json "@member-role-update.json" --yes --format json
+```
+
+For a coordinator or bot/service-account role, keep both tables editable:
+
+```json
+{
+  "role_name": "Task Maintainer",
+  "role_type": "custom_role",
+  "base_rule_map": { "copy": false, "download": false },
+  "table_rule_map": {
+    "任务总表": { "perm": "edit" },
+    "更新记录": { "perm": "edit" }
+  }
+}
+```
+
+```powershell
+lark-cli base +role-create --as user --base-token BASE_TOKEN `
+  --json "@maintainer-role.json" --format json
+```
+
+If the current CLI or tenant cannot assign role members, finish membership assignment in the Feishu/Lark UI and report exactly which users/bots should be placed in each role.
+
+## Create Automatic Update-Log Workflow
+
+Use this when ordinary members may directly edit `任务总表`. First read real field IDs with `+field-list`; Workflow `ref` paths use field IDs such as `$.task_changed.fldXXXX`, not field names.
+
+```powershell
+lark-cli base +field-list --as user --base-token BASE_TOKEN --table-id TASK_TABLE_ID --format json
+```
+
+Workflow skeleton:
+
+```json
+{
+  "client_token": "UNIQUE_CLIENT_TOKEN",
+  "title": "任务总表变更自动写入更新记录",
+  "status": "Enabled",
+  "steps": [
+    {
+      "id": "task_changed",
+      "type": "SetRecordTrigger",
+      "title": "任务总表关键字段变更",
+      "next": "add_update_log",
+      "data": {
+        "table_name": "任务总表",
+        "record_watch_conjunction": "and",
+        "record_watch_info": [],
+        "field_watch_info": [
+          { "field_name": "状态" },
+          { "field_name": "最新进展" },
+          { "field_name": "卡点/需老师确认" },
+          { "field_name": "负责人" },
+          { "field_name": "协作人" },
+          { "field_name": "截止时间" },
+          { "field_name": "交付物" },
+          { "field_name": "研究计划" }
+        ],
+        "trigger_control_list": [],
+        "condition_list": null
+      }
+    },
+    {
+      "id": "add_update_log",
+      "type": "AddRecordAction",
+      "title": "写入更新记录",
+      "next": "sync_status_snapshot",
+      "data": {
+        "table_name": "更新记录",
+        "field_values": [
+          { "field_name": "提交标题", "value": [{ "value_type": "text", "value": "任务总表自动更新记录" }] },
+          { "field_name": "关联任务", "value": [{ "value_type": "ref", "value": "$.task_changed.recordId" }] },
+          { "field_name": "提交类型", "value": [{ "value_type": "option", "value": { "name": "进展更新" } }] },
+          { "field_name": "提交内容", "value": [{ "value_type": "text", "value": "任务总表关键字段发生变更，已自动归档。" }] },
+          { "field_name": "更新前状态", "value": [{ "value_type": "ref", "value": "$.task_changed.STATUS_SNAPSHOT_FIELD_ID" }] },
+          { "field_name": "更新后状态", "value": [{ "value_type": "ref", "value": "$.task_changed.STATUS_FIELD_ID" }] },
+          { "field_name": "提交人", "value": [{ "value_type": "ref", "value": "$.task_changed.recordModifiedUser" }] },
+          { "field_name": "备注", "value": [{ "value_type": "text", "value": "由 Base Workflow 自动生成。" }] }
+        ]
+      }
+    },
+    {
+      "id": "sync_status_snapshot",
+      "type": "SetRecordAction",
+      "title": "同步状态快照",
+      "next": null,
+      "data": {
+        "table_name": "任务总表",
+        "ref_info": { "step_id": "task_changed" },
+        "field_values": [
+          { "field_name": "状态快照", "value": [{ "value_type": "ref", "value": "$.task_changed.STATUS_FIELD_ID" }] }
+        ]
+      }
+    }
+  ]
+}
+```
+
+Create and enable the workflow:
+
+```powershell
+lark-cli base +workflow-create --as user --base-token BASE_TOKEN `
+  --json "@task-update-audit-workflow.json" --format json
+
+lark-cli base +workflow-enable --as user --base-token BASE_TOKEN --workflow-id WORKFLOW_ID `
+  --yes --format json
+```
+
+Important: test by editing one non-sensitive sample task. If bot/API/CLI writes do not trigger Workflow in this tenant, make the bot/API/CLI update path append a linked `更新记录` row itself.
 
 ## Add Records
 

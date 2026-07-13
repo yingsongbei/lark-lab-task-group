@@ -4,7 +4,7 @@ Use this as the default group message after the Base is created. Preview it with
 
 The bot must already exist in the group, or the user must create/invite one first. Suitable bot options include Feishu/Lark Aily-style bots, custom Feishu/Lark app bots, or external agents such as Codex/Claude Code connected through an approved Feishu/Lark bot/app integration.
 
-If the bot cannot directly edit the Base, phrase its role as proposing structured updates for a human coordinator to confirm. If it can edit the Base, still require confirmation for high-impact changes such as creating tasks, changing owners/deadlines, marking completion, or deleting records.
+If the bot cannot directly edit the Base, phrase its role as proposing structured updates for a human coordinator to confirm. If it can edit the Base, still require confirmation for high-impact changes such as creating tasks, changing owners/deadlines, marking completion, or deleting records. If bot/API writes do not trigger the Base Workflow, the bot must create the linked `Update Log` row in the same confirmed operation.
 
 ## Chinese Version
 
@@ -18,6 +18,7 @@ If the bot cannot directly edit the Base, phrase its role as proposing structure
 
 2. 更新任务看板
 请根据群聊中的明确进展，辅助更新任务看板。普通进度可以先整理；如果涉及新建任务、修改负责人、修改截止时间、标记已完成、删除任务、或改变是否需要老师确认，请先在群里发出确认信息，等负责人或协调人确认后再更新。
+如果你直接修改任务看板，请确保本次修改被同步归档到更新记录表；如果多维表格 Workflow 没有自动生成记录，请你在同一次确认操作中新增对应的关联更新记录。
 
 3. 每周定时提醒和总结
 请从下一个周期开始，每周 WEEKDAY TIME 定时触发一次任务提醒与周总结。总结内容包括：本周待推进任务、进行中任务、待老师确认事项、逾期或有卡点的任务、需要大家补充进度的任务。
@@ -61,6 +62,7 @@ When a supervisor or member mentions a new task, deadline, owner, collaborator, 
 
 2. Help update the task tracker.
 Routine progress may be organized directly. For new tasks, owner changes, deadline changes, completion marks, deletion, or teacher-confirmation changes, ask for confirmation first.
+When you directly update the tracker, make sure the update is archived in the update-log table. If the Base Workflow does not create that row automatically, create the linked log row yourself.
 
 3. Send weekly reminders and summaries.
 Every WEEKDAY at TIME, summarize pending tasks, in-progress tasks, teacher-confirmation items, overdue/blocker items, and tasks needing progress updates.

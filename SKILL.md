@@ -22,6 +22,7 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
    - Existing group or create a new group?
    - Existing bot or add/invite one? The lab must provide or create the intelligent bot itself; this skill briefs the bot and wires permissions/workflow around it.
    - Should group members view only or edit the task tracker?
+   - Who should retain edit access to the `Update Log` audit table? Default to the user/coordinator plus the bot or service account; ordinary members should be read-only there.
    - Weekly reminder time and timezone.
    - Whether messages to the group must be previewed for user approval before sending.
 
@@ -41,11 +42,13 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
    - Create the first table named `Task Register`.
    - Use the schema in `references/base-template.md`.
    - Add an `Update Log` table and link it back to `Task Register`, so task rows show clickable update history while the main table stays focused on current state.
+   - Add an internal `Status Snapshot` field to `Task Register` when automatic audit logging is enabled; hide it from routine views.
    - Add categories and views exactly enough for the lab to start; avoid overbuilding.
 
 5. Configure permissions:
    - Grant the group chat `edit` permission when the lab members should update tasks themselves.
    - Set public link sharing conservatively, usually `tenant_readable`, with external sharing disabled.
+   - If advanced Base permissions are available, allow ordinary members to edit `Task Register` but make `Update Log` read-only. Keep `Update Log` edit/write access only for the named owner/coordinator and bot or service account. If role-member assignment is not fully exposed by CLI, tell the user exactly what must be finished in the Feishu/Lark UI.
    - Report the permission model plainly to the user.
 
 6. Configure views:
@@ -75,6 +78,8 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
    - For every confirmed task update, update the task row to the latest state and append a linked record in `Update Log`.
    - Link the update record to the task through the bidirectional `Update Log` / `Task` relation.
    - Use the update record to preserve process details, previous status, new status, submitter, and context that should not clutter the main task row.
+   - When the team will edit `Task Register` directly, configure a Base Workflow automation: on watched-field changes in `Task Register`, append a linked row to `Update Log`, then sync `Status Snapshot` to the current status. Use `Status Snapshot` as the previous-status source for the next audit row.
+   - If bot/API writes do not trigger the Base Workflow in that tenant, the bot/API update must create the `Update Log` row in the same confirmed operation.
 
 10. Validate:
    - Read back Base fields, views, permissions, and sample records.
@@ -90,6 +95,8 @@ Use these default operating rules unless the user says otherwise:
 - The student coordinator or user confirms ambiguous teacher instructions by restating task goal, owner, deadline, deliverable, and confirmation points.
 - For agent-assisted task entry, use a strict draft-first loop: draft table -> user edits -> revised table -> explicit upload confirmation -> Base write. Never skip the preview table.
 - For confirmed updates, keep `Task Register` as the current state and append every change to `Update Log`; do not use the main task row as the long-form history archive.
+- Treat `Update Log` as an audit table. Do not ask ordinary members to edit it directly; protect it with read-only permissions where possible. Only the user/coordinator, named maintainers, and the bot/service account should write or repair log rows.
+- If direct edits to `Task Register` are allowed, enable automatic audit logging through Base Workflow; otherwise ensure every bot or CLI task update also appends a linked `Update Log` record.
 - When a task is marked `Completed`, clear the teacher-confirmation/blocker field by default so completed work does not remain in the confirmation view. Only keep or write blocker text for completed tasks when the user explicitly asks for it.
 
 ## References
