@@ -28,6 +28,15 @@ Create these fields in this order:
 14. `Updated Time` - updated_at.
 15. `Update Log` - link to `Update Log`; created automatically when the update-log table uses a bidirectional link field.
 16. `Status Snapshot` - text; internal field for audit workflow only. Hide it from routine views.
+17. `Current Week Marker` - formula returning text; internal field for the dynamic current-week view. Hide it from routine views.
+
+Recommended English formula:
+
+```text
+IF(ISBLANK([Deadline]), "Not This Week", IF(AND([Deadline] >= TODAY() - WEEKDAY(TODAY(), 2) + 1, [Deadline] < TODAY() - WEEKDAY(TODAY(), 2) + 8), "This Week", "Not This Week"))
+```
+
+For a Chinese tracker, use field `本周标记`, deadline field `截止时间`, and results `本周` / `非本周`.
 
 ## Update Log Table
 
@@ -121,21 +130,27 @@ Create these views:
 
 3. `This Week` / `本周任务`
    - Type: grid.
-   - Filter deadline from Monday 00:00 through Sunday 23:59 for the current week.
+   - Filter `Current Week Marker = This Week` / `本周标记 = 本周`.
+   - The marker formula must calculate Monday 00:00 through the next Monday 00:00 from `TODAY()`; do not store setup-week dates in the view filter.
    - Sort by `Deadline` ascending.
 
-4. `Teacher Confirmation` / `待老师确认`
+4. `Overdue Unfinished` / `逾期未完成`
+   - Type: grid.
+   - Filter: `Deadline < Today` and `Status` does not contain `Completed` / `已完成`.
+   - Sort by `Status`, then `Deadline` ascending, then `Updated Time` descending.
+
+5. `Teacher Confirmation` / `待老师确认`
    - Type: grid.
    - Filter: `Teacher Confirmation / Blocker` is not empty.
    - Visible field order:
      `Task Name`, `Teacher Confirmation / Blocker`, `Owner`, `Collaborators`, `Deliverable`, `Research Plan`, `Update Log`, `Deadline`, `Status`, `Task Category`.
 
-5. `Member Workload` / `成员任务分工`
+6. `Member Workload` / `成员任务分工`
    - Type: grid.
    - Group by `Owner`.
    - Sort by `Deadline` ascending.
 
-6. `Update Log Table` / `更新记录表`
+7. `Update Log Table` / `更新记录表`
    - Table: `Update Log`.
    - Type: grid.
    - Sort by `Submitted Time` / `提交时间` descending.
@@ -143,6 +158,13 @@ Create these views:
      `Update Title`, `Task`, `Update Type`, `Update Content`, `Previous Status`, `New Status`, `Submitted By`, `Notes`, `Submitted Time`.
 
 Do not create a personal `My Tasks` view by default unless the user asks for it.
+
+### Current-Week View Bug Prevention
+
+- Never implement a reusable `This Week` view with fixed `ExactDate(...)` values. That only shows the week in which the template was created.
+- Make the formula return text instead of Boolean. The Base view-filter API accepts a single string or number for formula fields, but may reject a Boolean filter value.
+- After creating the internal marker, explicitly restore visible fields for all routine views because Base may auto-add new fields to existing views.
+- Verify kanban visibility separately. If setting kanban visible fields by name produces a no-op, submit the same list with real field IDs.
 
 ## Permission Model
 

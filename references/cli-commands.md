@@ -98,6 +98,40 @@ Use `Status Snapshot` instead of `状态快照` for English trackers.
 
 ## Create Views
 
+### Dynamic current-week and overdue views
+
+Do not use fixed setup-week dates for a reusable `This Week` view. Create an internal formula that returns text; Boolean formula values may be rejected by the view-filter API.
+
+```json
+{
+  "name": "Current Week Marker",
+  "type": "formula",
+  "description": "Internal field used by the dynamic current-week view.",
+  "expression": "IF(ISBLANK([Deadline]), \"Not This Week\", IF(AND([Deadline] >= TODAY() - WEEKDAY(TODAY(), 2) + 1, [Deadline] < TODAY() - WEEKDAY(TODAY(), 2) + 8), \"This Week\", \"Not This Week\"))"
+}
+```
+
+```powershell
+lark-cli base +field-create --as user --base-token BASE_TOKEN --table-id TABLE_ID `
+  --json "@current-week-marker.json" --i-have-read-guide --format json
+```
+
+For a Chinese tracker, use `本周标记`, `[截止时间]`, `本周`, and `非本周`.
+
+Current-week filter:
+
+```json
+{"logic":"and","conditions":[["Current Week Marker","==","This Week"]]}
+```
+
+Overdue-unfinished filter:
+
+```json
+{"logic":"and","conditions":[["Deadline","<","Today"],["Status","disjoint",["Completed"]]]}
+```
+
+After creating the formula field, reapply visible-field lists to all routine views so the internal marker stays hidden. Verify kanban separately; when a name-based visible-field update returns a no-op, retry with real field IDs from `+field-list`.
+
 ```powershell
 lark-cli base +view-rename --as user --base-token BASE_TOKEN --table-id TABLE_ID --view-id DEFAULT_VIEW_ID --name "Task Entry"
 

@@ -43,6 +43,7 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
    - Use the schema in `references/base-template.md`.
    - Add an `Update Log` table and link it back to `Task Register`, so task rows show clickable update history while the main table stays focused on current state.
    - Add an internal `Status Snapshot` field to `Task Register` when automatic audit logging is enabled; hide it from routine views.
+   - Add an internal text-returning formula field such as `Current Week Marker` when the tracker includes a current-week view. Use `TODAY()` and `WEEKDAY()` so the marker moves automatically each week; never freeze the view to setup-week dates.
    - Add categories and views exactly enough for the lab to start; avoid overbuilding.
 
 5. Configure permissions:
@@ -53,6 +54,9 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
 
 6. Configure views:
    - Create the views in `references/base-template.md`.
+   - Implement `This Week` with the dynamic `Current Week Marker` formula and filter for the text result `This Week`. Do not use fixed `ExactDate(...)` boundaries for a reusable current-week view.
+   - Add `Overdue Unfinished`: deadline earlier than `Today` and status not `Completed`.
+   - Hide `Current Week Marker` from every routine view after creating it. New Base fields may be added to existing views automatically; reapply each view's visible-field list and verify the kanban separately. If a kanban name-based update is a no-op, retry with real field IDs.
    - Use `Teacher Confirmation` to show records where the confirmation/callback field is not empty.
    - Use the status kanban for the overview; records that require teacher confirmation should usually have `Status = Teacher Confirmation`, so the kanban column is not empty.
 
@@ -83,6 +87,7 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
 
 10. Validate:
    - Read back Base fields, views, permissions, and sample records.
+   - Read records through `This Week` and `Overdue Unfinished`: the current-week view must not retain setup-week records, and the overdue view must exclude completed work.
    - Summarize what was created and provide the Base URL.
 
 ## Update Rules
