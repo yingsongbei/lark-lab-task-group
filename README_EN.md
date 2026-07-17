@@ -20,7 +20,8 @@ It is designed for student-supervisor groups, wet-lab teams, sample-submission c
   - Overview Kanban
   - This Week, updated dynamically by date
   - Teacher Confirmation
-  - Member Workload
+  - Owner Assignment, grouped by the single accountable owner
+  - Member Participation, showing both owners and collaborators
   - Recent 4 Weeks Completed
 - Grant the group permission to edit the task tracker.
 - Configure bot responsibilities:
@@ -130,6 +131,15 @@ Recommended operating rhythm:
 6. **Resolve teacher confirmations**: write a concrete question in the blocker/confirmation field and expose it in the confirmation view. After a decision, record the conclusion in the research plan or latest progress and clear the confirmation field.
 7. **Maintain dates before reporting**: members keep progress current and review current-stage deadlines before report generation. `This Week` includes only unfinished tasks with explicit deadlines in the current week.
 8. **Build reports from three views**: read `This Week`, `Teacher Confirmation`, and `Recent 4 Weeks Completed`. Generate a report only when all three reads succeed, then either preview it privately or send it to the group according to team settings.
+
+## Owner Assignment And Member Participation
+
+The template separates accountability from participation:
+
+- `Owner Assignment` groups by the single accountable owner and answers who owns each task. Collaborators remain visible on the task row but are not relabeled as owners.
+- `Member Participation` stays ungrouped, displays both owners and collaborators, and supports member-name search or temporary filtering to find everything a person participates in.
+- The existing owner field or comma-separated collaborator text cannot produce exact per-member workload counts. Do not label those groupings as collaborator-inclusive workload statistics.
+- When exact counts are required, optionally create a normalized `Member Assignment` table with one row per task-member-role. Before adding it, confirm whether the bot/CLI, a Workflow, or a human maintainer will keep it synchronized, and explain that Workflow synchronization may consume additional monthly runs. The default lightweight template does not create this table.
 
 Example private message:
 

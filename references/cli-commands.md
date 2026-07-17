@@ -156,7 +156,7 @@ lark-cli base +view-create --as user --base-token BASE_TOKEN --table-id TABLE_ID
   --json "@views.json" --format json
 ```
 
-Include `Status-Sorted Table`, `This Week`, `Teacher Confirmation`, `Member Workload`, and `Recent 4 Weeks Completed`. Keep the `Completed` status option last and sort the status table by status, deadline, then updated time.
+Include `Status-Sorted Table`, `This Week`, `Teacher Confirmation`, `Owner Assignment`, `Member Participation`, and `Recent 4 Weeks Completed`. Group only `Owner Assignment` by `Owner`. Keep `Member Participation` ungrouped with both `Owner` and `Collaborators` visible; it is a lookup view, not exact collaborator-inclusive workload statistics. Keep the `Completed` status option last and sort the status table by status, deadline, then updated time.
 
 Set visible fields:
 

@@ -87,6 +87,9 @@ Use this operating model by default unless the user chooses another one:
 6. Configure views:
    - Create the views in `references/base-template.md`.
    - Add `Status-Sorted Table` / `总表（按状态排序）`. Keep the status option order active-first and `Completed` last, so completed work does not occupy the first screen as the tracker grows.
+   - Name the owner-grouped accountability view `Owner Assignment` / `负责人任务分工`, not a generic member-workload name. Group it only by `Owner`; collaborators remain visible but do not become accountable owners.
+   - Add `Member Participation` / `成员参与任务` as an ungrouped lookup view that displays both `Owner` and `Collaborators`. Let users search or filter this view by a member name; do not present it as exact per-member workload statistics.
+   - If the user needs exact workload counts that include collaborators, ask before creating a normalized `Member Assignment` table with one row per task-member-role. Confirm how it will stay synchronized and explain any Workflow quota impact; do not infer independent member groups from a comma-separated collaborator field.
    - Implement `This Week` with the dynamic `Current Week Marker` formula and filter for the text result `This Week`. Do not use fixed `ExactDate(...)` boundaries for a reusable current-week view.
    - Define `This Week` strictly as records with an explicit deadline from Monday 00:00 inclusive to the next Monday 00:00 exclusive, with status not `Completed`. Do not infer weekly membership from `Latest Progress`, `Research Plan`, or phrases such as "finish this week".
    - Add `Recent 4 Weeks Completed` using the rolling marker; use it as the completed-work source for weekly summaries.
@@ -126,6 +129,7 @@ Use this operating model by default unless the user chooses another one:
 
 10. Validate:
    - Read back Base fields, views, permissions, and sample records.
+   - Verify that `Owner Assignment` is grouped only by owner and that `Member Participation` visibly includes both owners and collaborators. Do not claim collaborator-inclusive workload counts unless a normalized assignment table exists.
    - Read records through `This Week`: the current-week view must not retain setup-week records.
    - Independently validate every `This Week` record against the current timezone's Monday-to-next-Monday date range and `Status != Completed`; do not trust the view name alone.
    - Read `Recent 4 Weeks Completed` and verify it rolls with `TODAY()` rather than setup-time dates.

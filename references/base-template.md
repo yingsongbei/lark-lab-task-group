@@ -169,18 +169,27 @@ Create these views:
    - Visible field order:
      `Task Name`, `Teacher Confirmation / Blocker`, `Owner`, `Collaborators`, `Deliverable`, `Research Plan`, `Update Log`, `Deadline`, `Status`, `Task Category`.
 
-6. `Member Workload` / `成员任务分工`
+6. `Owner Assignment` / `负责人任务分工`
    - Type: grid.
    - Group by `Owner`.
    - Sort by `Deadline` ascending.
+   - Treat this as the accountability view: one task has one accountable owner. Keep `Collaborators` visible, but do not imply that collaborator-only members are missing from the tracker.
 
-7. `Recent 4 Weeks Completed` / `近四周已完成`
+7. `Member Participation` / `成员参与任务`
+   - Type: grid.
+   - Do not group by `Owner` or by a comma-separated `Collaborators` text value.
+   - Visible field order:
+     `Task Name`, `Owner`, `Collaborators`, `Status`, `Deadline`, `Latest Progress`, `Teacher Confirmation / Blocker`, `Priority`, `Task Category`, `Deliverable`, `Research Plan`, `Related Materials`, `Update Log`, `Created Time`, `Updated Time`.
+   - Sort by `Status` ascending, `Deadline` ascending, then `Updated Time` descending.
+   - Use member-name search or a temporary filter to inspect everything a person participates in. This is a participation lookup, not an exact per-member workload count.
+
+8. `Recent 4 Weeks Completed` / `近四周已完成`
    - Type: grid.
    - Filter `Recent Completion Marker = Recent 4 Weeks Completed` / `近四周完成标记 = 近四周已完成`.
    - Sort by `Updated Time` descending.
    - Use this view as the completed-work input for the weekly report.
 
-8. `Update Log Table` / `更新记录表`
+9. `Update Log Table` / `更新记录表`
    - Table: `Update Log`.
    - Type: grid.
    - Sort by `Submitted Time` / `提交时间` descending.
@@ -188,6 +197,13 @@ Create these views:
      `Update Title`, `Task`, `Update Type`, `Update Content`, `Previous Status`, `New Status`, `Submitted By`, `Notes`, `Submitted Time`.
 
 Do not create a personal `My Tasks` view by default unless the user asks for it.
+
+### Owner And Participation Views
+
+- Keep ownership and participation separate. `Owner Assignment` answers who is accountable; `Member Participation` answers where a person is involved.
+- A task with multiple collaborators cannot be counted once under every person by grouping the existing `Owner` or comma-separated `Collaborators` text fields. Never label such a grouping as exact member workload statistics.
+- When exact collaborator-inclusive counts are required, offer an optional normalized `Member Assignment` table with fields such as `Member`, linked `Task`, and `Role` (`Owner` or `Collaborator`), plus status/deadline lookups. Store one row per task-member-role.
+- Before adding that table, confirm whether the bot/CLI, a Workflow, or a human maintainer will synchronize it. Explain that a Workflow-based sync can consume additional monthly runs. Keep this advanced table out of the default lightweight setup unless the user requests exact counts.
 
 ### Current-Week View Bug Prevention
 
@@ -222,7 +238,7 @@ When members are allowed to edit `Task Register` directly, configure a Base Work
 
 Use the source-aware topology in `audit-workflow.md`. It distinguishes CLI/bot writes, the configured coordinator's manual edits, and other members' manual edits. Every branch must use its own cleanup action to sync `Status Snapshot` and clear `Update Source`; independently read the saved workflow back because nested branches may silently discard a shared cleanup node.
 
-Hide `Status Snapshot` and `Update Source` from `Task Entry`, `Status-Sorted Table`, `Overview Kanban`, `Teacher Confirmation`, `Member Workload`, and every other routine view.
+Hide `Status Snapshot` and `Update Source` from `Task Entry`, `Status-Sorted Table`, `Overview Kanban`, `Teacher Confirmation`, `Owner Assignment`, `Member Participation`, and every other routine view.
 
 Important fallback: if bot/API/CLI writes do not trigger Workflow in the user's tenant, the bot/API/CLI path must create the linked `Update Log` row, sync the snapshot, and clear the source marker in the same confirmed operation.
 
