@@ -43,8 +43,14 @@ Install in this order. Replace `<REPOSITORY_URL>` with the URL shown on this rep
 
 ```powershell
 npx @larksuite/cli@latest install
-npx skills add larksuite/cli -g -y
+npx skills add larksuite/cli -g -y --skill lark-shared lark-base lark-drive lark-im
 npx skills add <REPOSITORY_URL> -g -y
+```
+
+Install `lark-contact` separately when member-name resolution is needed:
+
+```powershell
+npx skills add larksuite/cli -g -y --skill lark-contact
 ```
 
 Restart the agent after installation so it discovers the new skills. Then configure and authorize Lark CLI:
@@ -92,6 +98,56 @@ The agent will:
 7. Convert initial tasks into a preview table and upload them only after confirmation.
 8. Keep only the current task state in the main table while archiving every change in `Update Log`.
 9. Configure automatic audit logging and permission protection when members may edit the main table directly.
+
+## Recommended Daily Collaboration
+
+The template works best when four spaces have distinct responsibilities:
+
+| Space | Main purpose | Typical content |
+|---|---|---|
+| Private bot chat | Drafting, preview, and approval for high-impact operations | Bulk task intake, field changes, deletion, permissions, and weekly-report preview |
+| Lab group chat | Transparent collaboration and timely interaction | Supervisor instructions, progress reports, blockers, and research decisions |
+| Task Register | The single source of truth for current team state | Owners, deadlines, status, latest progress, deliverables, and research plans |
+| Update Log | Automatic audit trail, not a routine editing surface | Time, submitter, previous/new status, and change summary |
+
+```mermaid
+flowchart TD
+    A["Supervisor or member raises a task in the group"] --> B["Coordinator asks the bot privately to structure it"]
+    B --> C["Bot returns a task-table draft"]
+    C --> D{"Coordinator confirms?"}
+    D -->|Revise| B
+    D -->|Upload| E["Write Task Register and append Update Log"]
+    E --> F["Team executes, discusses, and reports progress"]
+    F --> G["Member edits the table or mentions the bot"]
+    G --> H["Workflow or bot records the change"]
+    H --> I["Scheduled job reads dynamic views"]
+    I --> J["Preview privately or send to the group"]
+```
+
+Recommended operating rhythm:
+
+1. **Tasks enter through the group**: supervisors or members state assignments where context and responsibility are visible to everyone.
+2. **Draft privately**: the coordinator asks the bot to turn scattered messages into a table. The bot does not upload or send to the group yet.
+3. **Write after confirmation**: the coordinator completes owners, deadlines, deliverables, research plans, and teacher-confirmation questions. The bot writes only after an explicit upload instruction.
+4. **Execute and update**: members may edit `Task Register` directly or mention the bot in the group. Routine progress can be organized normally; creation, deletion, completion, owner changes, and deadline changes require confirmation.
+5. **Record every change**: Workflow logs manual main-table edits. Bot or CLI writes are logged by Workflow or appended by the bot in the same operation. Ordinary members do not edit `Update Log` directly.
+6. **Resolve teacher confirmations**: write a concrete question in the blocker/confirmation field and expose it in the confirmation view. After a decision, record the conclusion in the research plan or latest progress and clear the confirmation field.
+7. **Maintain dates before reporting**: members keep progress current and review current-stage deadlines before report generation. `This Week` includes only unfinished tasks with explicit deadlines in the current week.
+8. **Build reports from three views**: read `This Week`, `Teacher Confirmation`, and `Recent 4 Weeks Completed`. Generate a report only when all three reads succeed, then either preview it privately or send it to the group according to team settings.
+
+Example private message:
+
+```text
+Turn the following instructions into a task-table draft. Do not upload yet.
+I will confirm before you write to the tracker.
+```
+
+Example group update:
+
+```text
+@Bot, Task A completed sample preparation today and is now waiting for testing.
+Please structure the update and confirm whether it should be written to the tracker.
+```
 
 ## Draft-First Task Writes
 

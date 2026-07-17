@@ -21,6 +21,18 @@ Set up a lightweight lab task workflow in Feishu/Lark:
 
 Always protect privacy. Do not include real gene names, sample names, unpublished project names, people's names, or institution-specific details in reusable templates. Use neutral examples such as `Genotype A`, `Material group`, `Student A`, and `Assistant`.
 
+## Collaboration Model
+
+Use this operating model by default unless the user chooses another one:
+
+- Treat the private bot conversation as the control and drafting channel for bulk task intake, corrections, permissions, deletion, and weekly-report preview.
+- Treat the group chat as the transparent team channel for assignments, routine progress, blockers, questions, and decisions.
+- Treat `Task Register` as the single source of truth for current task state.
+- Treat `Update Log` as an append-only audit trail for ordinary members.
+- Draft privately before task writes. Send group messages only according to the user's chosen approval mode.
+- Let members either edit `Task Register` directly or report progress by mentioning the bot. Archive both paths through Workflow or an explicit bot/CLI log write.
+- Before a weekly report, ask members to maintain current-stage deadlines. Build the report only from the three validated dynamic views.
+
 ## Workflow
 
 0. Run the first-use preflight and resume safely:

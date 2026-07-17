@@ -27,11 +27,17 @@ Run the following in a terminal. Replace `<REPOSITORY_URL>` with the URL of this
 
 ```powershell
 npx @larksuite/cli@latest install
-npx skills add larksuite/cli -g -y
+npx skills add larksuite/cli -g -y --skill lark-shared lark-base lark-drive lark-im
 npx skills add <REPOSITORY_URL> -g -y
 ```
 
-The second command installs the official companion skills, including `lark-shared`, `lark-base`, `lark-drive`, and `lark-im`. Restart the agent after installation so it discovers the new skills.
+The second command installs only the required official companion skills. Add the optional identity-resolution skill when needed:
+
+```powershell
+npx skills add larksuite/cli -g -y --skill lark-contact
+```
+
+Restart the agent after installation so it discovers the new skills.
 
 For a project-local installation, omit `-g`. A manual clone into the agent's skills directory is a fallback, but the skill installer is preferred because it validates the repository layout and discovers the skill automatically.
 

@@ -6,6 +6,8 @@ The bot must already exist in the group, or the user must create/invite one firs
 
 If the bot cannot directly edit the Base, phrase its role as proposing structured updates for a human coordinator to confirm. If it can edit the Base, still require confirmation for high-impact changes such as creating tasks, changing owners/deadlines, marking completion, or deleting records. If bot/API writes do not trigger the Base Workflow, the bot must create the linked `Update Log` row in the same confirmed operation.
 
+Use private chat as the drafting and approval channel for bulk or high-impact work. Use the group chat as the transparent collaboration channel for assignments, routine progress, blockers, and decisions. The user may choose either private preview or direct group delivery for scheduled reports.
+
 For scheduled reports, use `weekly-automation.md`. Replace the complete scheduled prompt in one operation and validate it by reading the saved definition back. Do not assemble a production prompt from several partial chat messages.
 
 ## Chinese Version
