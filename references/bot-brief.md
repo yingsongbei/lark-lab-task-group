@@ -4,9 +4,9 @@ Use this as the default group message after the Base is created. Preview it with
 
 The bot must already exist in the group, or the user must create/invite one first. Suitable bot options include Feishu/Lark Aily-style bots, custom Feishu/Lark app bots, or external agents such as Codex/Claude Code connected through an approved Feishu/Lark bot/app integration.
 
-If the bot cannot directly edit the Base, phrase its role as proposing structured updates for a human coordinator to confirm. If it can edit the Base, still require confirmation for high-impact changes such as creating tasks, changing owners/deadlines, marking completion, or deleting records. If bot/API writes do not trigger the Base Workflow, the bot must create the linked `Update Log` row in the same confirmed operation.
+If the bot cannot directly edit the Base, use it primarily for lightweight fragment capture and let an authorized member structure and confirm updates in Codex. If it can edit the Base, still require confirmation for high-impact changes such as creating tasks, changing owners/deadlines, marking completion, or deleting records. If bot/API writes do not trigger the Base Workflow, the bot must create the linked `Update Log` row in the same confirmed operation.
 
-Use private chat as the drafting and approval channel for bulk or high-impact work. Use the group chat as the transparent collaboration channel for assignments, routine progress, blockers, and decisions. The user may choose either private preview or direct group delivery for scheduled reports.
+Use private bot chat as a lightweight fragment-capture channel. For bulk or high-impact work, prefer natural-language structuring and draft review in Codex followed by confirmed CLI writes. Use the group chat as the transparent collaboration channel for assignments, routine progress, blockers, and decisions. The user may choose either private preview or direct group delivery for scheduled reports.
 
 For scheduled reports, use `weekly-automation.md`. Replace the complete scheduled prompt in one operation and validate it by reading the saved definition back. Do not assemble a production prompt from several partial chat messages.
 
@@ -21,7 +21,7 @@ For scheduled reports, use `weekly-automation.md`. Replace the complete schedule
 当老师或同学在群里提到新的任务、安排、截止时间、负责人或交付物时，请帮忙整理成清晰的任务信息，包括：任务名称、任务类别、负责人、协作人、截止时间、状态、交付物、研究计划、最新进展、卡点/需老师确认。
 
 2. 更新任务看板
-请根据群聊中的明确进展，辅助更新任务看板。普通进度可以先整理；如果涉及新建任务、修改负责人、修改截止时间、标记已完成、删除任务、或改变是否需要老师确认，请先在群里发出确认信息，等负责人或协调人确认后再更新。
+请根据群聊中的明确进展，辅助更新任务看板。普通进度可以先整理；如果涉及新建任务、修改负责人、修改截止时间、标记已完成、删除任务、或改变是否需要老师确认，请先发出确认信息，等任务负责人或其他获授权成员确认后再更新。
 如果你直接修改任务看板，请确保本次修改被同步归档到更新记录表；如果多维表格 Workflow 没有自动生成记录，请你在同一次确认操作中新增对应的关联更新记录。
 通过 CLI 或机器人更新时，将内部“更新来源”标记为通用机器来源；记录中的提交人写“飞书 CLI”或机器人名称。成员手动修改时记录实际成员显示名，不显示账号数字别名或内部 ID。每次归档后同步状态快照并清空更新来源。
 

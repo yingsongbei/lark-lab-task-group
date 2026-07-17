@@ -9,8 +9,8 @@ Resolve these values at deployment time. Never commit them to a reusable skill:
 - `BASE_TOKEN`
 - `TASK_TABLE_ID`
 - `UPDATE_LOG_TABLE_ID`
-- `COORDINATOR_OPEN_ID`
-- `COORDINATOR_DISPLAY_NAME`
+- Optional `MAINTAINER_OPEN_ID`, only when one designated maintainer needs a separate branch
+- Optional `MAINTAINER_DISPLAY_NAME`, used only for that branch's user-facing attribution
 - `MACHINE_SOURCE_LABEL`, such as `Feishu CLI` or `Lark CLI`
 - Real field IDs returned by `field-list`
 
@@ -35,12 +35,12 @@ Use this topology:
 Task changed
   -> Is Update Source the machine label?
        true  -> Add machine update log -> Sync machine snapshot and clear source
-       false -> Is modifier the configured coordinator?
-                  true  -> Add coordinator update log -> Sync coordinator snapshot and clear source
+       false -> Is modifier a configured designated maintainer? (optional)
+                  true  -> Add maintainer update log -> Sync maintainer snapshot and clear source
                   false -> Add other-member update log -> Sync other-member snapshot and clear source
 ```
 
-Use three independent `SetRecordAction` cleanup steps. In nested Feishu/Lark Workflow branches, the service may silently discard multiple branch links to one shared cleanup node even when the update response echoes those links.
+Use one independent `SetRecordAction` cleanup step for every configured attribution branch. A two-path setup needs machine and human cleanup steps; adding an optional designated-maintainer branch makes three. In nested Feishu/Lark Workflow branches, the service may silently discard multiple branch links to one shared cleanup node even when the update response echoes those links.
 
 Recommended stable step IDs:
 
@@ -49,8 +49,8 @@ Recommended stable step IDs:
 - `add_machine_log`
 - `sync_machine_snapshot`
 - `manual_user_branch`
-- `add_coordinator_log`
-- `sync_coordinator_snapshot`
+- Optional `add_maintainer_log`
+- Optional `sync_maintainer_snapshot`
 - `add_other_manual_log`
 - `sync_other_snapshot`
 
@@ -66,7 +66,7 @@ Write user-facing audit fields as follows:
 | Source | Submitted By | Notes |
 |---|---|---|
 | CLI/bot write | `MACHINE_SOURCE_LABEL` | Generated after a confirmed CLI/bot task update. |
-| Coordinator manual edit | `COORDINATOR_DISPLAY_NAME` | Generated after the coordinator manually changed the task table. |
+| Designated maintainer manual edit (optional) | `MAINTAINER_DISPLAY_NAME` | Generated after the configured maintainer manually changed the task table. |
 | Other member manual edit | Actual `recordModifiedUser` display value | Generated after that member manually changed the task table. |
 
 Do not display numeric account aliases, open IDs, user IDs, Base tokens, or internal source-marker values in audit rows. Stable IDs belong only in Workflow conditions.
@@ -108,7 +108,7 @@ Do not trust only the `workflow-update` response. After every update:
 1. Call `workflow-get` independently.
 2. Confirm the workflow status is enabled.
 3. Confirm `add_machine_log.next = sync_machine_snapshot`.
-4. Confirm `add_coordinator_log.next = sync_coordinator_snapshot`.
+4. If configured, confirm `add_maintainer_log.next = sync_maintainer_snapshot`.
 5. Confirm `add_other_manual_log.next = sync_other_snapshot`.
 6. Confirm every cleanup action writes both `Status Snapshot` and an empty `Update Source`.
 7. Confirm the two internal fields remain hidden from all routine views.

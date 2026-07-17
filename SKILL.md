@@ -25,12 +25,14 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
 
 Use this operating model by default unless the user chooses another one:
 
-- Treat the private bot conversation as the control and drafting channel for bulk task intake, corrections, permissions, deletion, and weekly-report preview.
+- Do not assume the lab has a fixed coordinator. Any authorized member may capture fragments, request a draft, review it, and confirm a write.
+- Treat the private bot conversation primarily as a lightweight fragment-capture channel for tasks, progress, and open questions arising online or offline.
+- Treat Codex plus `lark-cli` as the primary path for turning natural-language context into a written table draft and for confirmed batch creation or updates.
 - Treat the group chat as the transparent team channel for assignments, routine progress, blockers, questions, and decisions.
 - Treat `Task Register` as the single source of truth for current task state.
 - Treat `Update Log` as an append-only audit trail for ordinary members.
-- Draft privately before task writes. Send group messages only according to the user's chosen approval mode.
-- Let members either edit `Task Register` directly or report progress by mentioning the bot. Archive both paths through Workflow or an explicit bot/CLI log write.
+- Use a draft-first loop before every agent-assisted task write. Send group messages only according to the user's chosen approval mode.
+- Also let members edit `Task Register` directly or report progress by mentioning the bot. Archive every path through Workflow or an explicit bot/CLI log write.
 - Before a weekly report, ask members to maintain current-stage deadlines. Build the report only from the three validated dynamic views.
 
 ## Workflow
@@ -46,11 +48,11 @@ Use this operating model by default unless the user chooses another one:
    - Existing group or create a new group?
    - Existing bot or add/invite one? The lab must provide or create the intelligent bot itself; this skill briefs the bot and wires permissions/workflow around it.
    - Should group members view only or edit the task tracker?
-   - Who should retain edit access to the `Update Log` audit table? Default to the user/coordinator plus the bot or service account; ordinary members should be read-only there.
+   - Who should retain edit access to the `Update Log` audit table? Default to the Base owner, user-selected maintainers, and the bot or service account; ordinary members should be read-only there.
    - Weekly reminder time and timezone.
    - The weekly data-maintenance cutoff. Recommend that members update tasks continuously and, at minimum, review current-stage deadlines before the scheduled Monday report.
    - Whether the weekly report should include the default three views: `This Week`, `Teacher Confirmation`, and `Recent 4 Weeks Completed`.
-   - The coordinator's preferred display name and stable Feishu/Lark user ID when audit records should distinguish that person from other members. Keep these values in deployment configuration, never in the reusable skill files.
+   - Whether one designated maintainer needs special audit attribution. If yes, resolve that person's display name and stable Feishu/Lark user ID at deployment time; otherwise attribute every human edit to the actual modifier. Never store deployment identities in reusable skill files.
    - Whether messages to the group must be previewed for user approval before sending.
 
 2. Prepare Feishu/Lark CLI:
@@ -81,7 +83,7 @@ Use this operating model by default unless the user chooses another one:
 5. Configure permissions:
    - Grant the group chat `edit` permission when the lab members should update tasks themselves.
    - Set public link sharing conservatively, usually `tenant_readable`, with external sharing disabled.
-   - If advanced Base permissions are available, allow ordinary members to edit `Task Register` but make `Update Log` read-only. Keep `Update Log` edit/write access only for the named owner/coordinator and bot or service account. If role-member assignment is not fully exposed by CLI, tell the user exactly what must be finished in the Feishu/Lark UI.
+   - If advanced Base permissions are available, allow ordinary members to edit `Task Register` but make `Update Log` read-only. Keep `Update Log` edit/write access only for the Base owner, user-selected maintainers, and bot or service account. If role-member assignment is not fully exposed by CLI, tell the user exactly what must be finished in the Feishu/Lark UI.
    - Report the permission model plainly to the user.
 
 6. Configure views:
@@ -123,8 +125,8 @@ Use this operating model by default unless the user chooses another one:
    - Use the update record to preserve process details, previous status, new status, submitter, and context that should not clutter the main task row.
    - When the team will edit `Task Register` directly, configure the source-aware Base Workflow in `references/audit-workflow.md`: append a linked row to `Update Log`, attribute it to CLI/bot or the actual human editor, then sync `Status Snapshot` and clear `Update Source`.
    - For every CLI/bot task write, set `Update Source` to the configured machine-source label in the same patch. Human edits must not set that field.
-   - Use three independent cleanup actions after the CLI, coordinator, and other-member branches. Nested Feishu/Lark branches may discard a shared cleanup node even when an update response echoes the requested links.
-   - Display `Feishu CLI` / `Lark CLI` for CLI writes, the configured coordinator display name for that coordinator's manual edits, and the actual modifier for other manual edits. Do not expose numeric account aliases or internal IDs in user-facing log fields.
+   - Give every attribution branch its own cleanup action. A typical setup has machine and human branches; add an optional designated-maintainer branch only when the user wants special attribution. Nested Feishu/Lark branches may discard a shared cleanup node even when an update response echoes the requested links.
+   - Display `Feishu CLI` / `Lark CLI` for CLI writes and the actual modifier for human edits. When the user explicitly configures a designated maintainer branch, use that maintainer's deployment-time display name. Do not expose numeric account aliases or internal IDs in user-facing log fields.
    - If bot/API writes do not trigger the Base Workflow in that tenant, the bot/API update must create the `Update Log` row in the same confirmed operation.
 
 10. Validate:
@@ -141,16 +143,17 @@ Use this operating model by default unless the user chooses another one:
 
 Use these default operating rules unless the user says otherwise:
 
-- Group members update routine progress directly in the Base.
-- The bot can extract proposed tasks and progress from chat.
+- Prefer natural-language, draft-first updates in Codex followed by confirmed batch writes through `lark-cli`, especially for multiple changes.
+- The bot can capture fragment notes privately and extract proposed tasks or progress from group chat.
+- Members may also update routine progress directly in the Base or mention the bot in the group.
 - The bot should ask for confirmation before creating new tasks, changing owner/deadline, marking complete, deleting records, or changing a task to/from teacher-confirmation status.
-- The student coordinator or user confirms ambiguous teacher instructions by restating task goal, owner, deadline, deliverable, and confirmation points.
+- An authorized member confirms ambiguous instructions by restating task goal, owner, deadline, deliverable, and confirmation points.
 - For agent-assisted task entry, use a strict draft-first loop: draft table -> user edits -> revised table -> explicit upload confirmation -> Base write. Never skip the preview table.
 - For confirmed updates, keep `Task Register` as the current state and append every change to `Update Log`; do not use the main task row as the long-form history archive.
-- Treat `Update Log` as an audit table. Do not ask ordinary members to edit it directly; protect it with read-only permissions where possible. Only the user/coordinator, named maintainers, and the bot/service account should write or repair log rows.
+- Treat `Update Log` as an audit table. Do not ask ordinary members to edit it directly; protect it with read-only permissions where possible. Only the Base owner, user-selected maintainers, and the bot/service account should write or repair log rows.
 - If direct edits to `Task Register` are allowed, enable automatic audit logging through Base Workflow; otherwise ensure every bot or CLI task update also appends a linked `Update Log` record.
 - Keep audit attribution source-aware: machine writes use a generic CLI/bot label; human writes use the person's display name. Never publish account aliases or stable IDs in reusable templates.
-- Every audit branch must finish by syncing `Status Snapshot` and clearing `Update Source`, including CLI writes and the coordinator's own edits.
+- Every configured audit branch must finish by syncing `Status Snapshot` and clearing `Update Source`, including CLI writes, ordinary human edits, and any optional designated-maintainer branch.
 - When a task is marked `Completed`, clear the teacher-confirmation/blocker field by default so completed work does not remain in the confirmation view. Only keep or write blocker text for completed tasks when the user explicitly asks for it.
 - Ask members to maintain progress and current-stage deadlines during normal work. At minimum, run a deadline review before the scheduled weekly report; tasks intended for completion that week should receive an explicit date in that week.
 - The weekly report's `This Week` section contains only non-completed tasks with explicit deadlines in the current Monday-through-Sunday window. Never substitute all open or in-progress tasks, and never infer dates from free text.

@@ -12,7 +12,7 @@ It is designed for student-supervisor groups, wet-lab teams, sample-submission c
 - Create a Base task tracker.
 - Configure task fields, categories, statuses, and priorities.
 - Create an `Update Log` table and expose clickable task history from the main table.
-- Optionally configure a source-aware Workflow that distinguishes CLI/bot edits, coordinator edits, and edits by other members.
+- Optionally configure a source-aware Workflow that distinguishes CLI/bot edits from human edits and, when needed, recognizes a designated maintainer separately.
 - Protect the `Update Log`: ordinary members can read it, while only selected maintainers and the bot/service account can write to it.
 - Create practical views:
   - Task Entry
@@ -98,39 +98,61 @@ The agent will:
 
 ## Recommended Daily Collaboration
 
-The template works best when four spaces have distinct responsibilities:
+The template works best when five entry points and spaces have distinct responsibilities:
 
 | Space | Main purpose | Typical content |
 |---|---|---|
-| Private bot chat | Drafting, preview, and approval for high-impact operations | Bulk task intake, field changes, deletion, permissions, and weekly-report preview |
+| Private bot chat | Lightweight fragment capture | Tasks, progress, and open questions arising online or offline |
+| Codex + Lark CLI | Primary structuring and batch-maintenance path | Add natural-language context, convert it into a written table draft, review it, then create or update records in batches |
 | Lab group chat | Transparent collaboration and timely interaction | Supervisor instructions, progress reports, blockers, and research decisions |
 | Task Register | The single source of truth for current team state | Owners, deadlines, status, latest progress, deliverables, and research plans |
 | Update Log | Automatic audit trail, not a routine editing surface | Time, submitter, previous/new status, and change summary |
 
 ```mermaid
-flowchart TD
-    A["Supervisor or member raises a task in the group"] --> B["Coordinator asks the bot privately to structure it"]
-    B --> C["Bot returns a task-table draft"]
-    C --> D{"Coordinator confirms?"}
-    D -->|Revise| B
-    D -->|Upload| E["Write Task Register and append Update Log"]
-    E --> F["Team executes, discusses, and reports progress"]
-    F --> G["Member edits the table or mentions the bot"]
-    G --> H["Workflow or bot records the change"]
-    H --> I["Scheduled job reads dynamic views"]
-    I --> J["Preview privately or send to the group"]
+flowchart TB
+    A["Task source<br/>online or offline"]
+    A --> B["Member messages bot privately<br/>capture fragment notes"]
+    B --> C["Member uses Codex<br/>add natural-language context"]
+    C --> D["Codex classifies and rewrites<br/>structured task-table draft"]
+
+    D --> E{"Member review"}
+    E -->|Revise| C
+    E -->|Confirm upload| F["Codex calls Lark CLI<br/>batch-write Task Register"]
+
+    F --> G["Append Update Log"]
+    G --> H["Team executes tasks<br/>communicate online or offline"]
+
+    H --> I{"Choose update path"}
+
+    I -->|Common| J["Member uses Codex<br/>describe changes naturally"]
+    I -->|Additional| K["Edit Task Register directly<br/>or mention bot in group"]
+
+    J --> L["Codex classifies changes<br/>return update-table draft"]
+    L --> M{"Member review"}
+    M -->|Revise| J
+    M -->|Confirm update| N["Lark CLI<br/>batch-update Task Register"]
+
+    N --> O["Task Register updated"]
+    K --> O
+
+    O --> P["Workflow / Codex / bot<br/>append Update Log"]
+    P --> H
+
+    P --> Q["Read dynamic views<br/>This Week / Confirmation / Recent"]
+    Q --> R["Generate report or reminder<br/>private preview / group send"]
 ```
 
 Recommended operating rhythm:
 
-1. **Tasks enter through the group**: supervisors or members state assignments where context and responsibility are visible to everyone.
-2. **Draft privately**: the coordinator asks the bot to turn scattered messages into a table. The bot does not upload or send to the group yet.
-3. **Write after confirmation**: the coordinator completes owners, deadlines, deliverables, research plans, and teacher-confirmation questions. The bot writes only after an explicit upload instruction.
-4. **Execute and update**: members may edit `Task Register` directly or mention the bot in the group. Routine progress can be organized normally; creation, deletion, completion, owner changes, and deadline changes require confirmation.
-5. **Record every change**: Workflow logs manual main-table edits. Bot or CLI writes are logged by Workflow or appended by the bot in the same operation. Ordinary members do not edit `Update Log` directly.
-6. **Resolve teacher confirmations**: write a concrete question in the blocker/confirmation field and expose it in the confirmation view. After a decision, record the conclusion in the research plan or latest progress and clear the confirmation field.
-7. **Maintain dates before reporting**: members keep progress current and review current-stage deadlines before report generation. `This Week` includes only unfinished tasks with explicit deadlines in the current week.
-8. **Build reports from three views**: read `This Week`, `Teacher Confirmation`, and `Recent 4 Weeks Completed`. Generate a report only when all three reads succeed, then either preview it privately or send it to the group according to team settings.
+1. **Tasks arise online or offline**: assignments may come from group chat, private messages, meetings, the lab bench, or other in-person discussions.
+2. **Capture fragments privately**: members send scattered tasks, progress, and open questions to the bot without requiring it to build the tracker immediately.
+3. **Structure natural language in Codex**: members provide the fragments and additional context to Codex, which classifies and rewrites them as a formal task-table draft.
+4. **Batch-write after review**: members complete owners, deadlines, deliverables, research plans, and confirmation questions. Codex uses Lark CLI only after an explicit upload instruction.
+5. **Execute and update**: the common path is to describe multiple changes naturally in Codex and batch-update through Lark CLI. Members may also edit `Task Register` directly or mention the bot in the group.
+6. **Record every change**: Workflow logs manual main-table edits. Codex, CLI, or bot writes are archived by Workflow or by the executor in the same operation. Ordinary members do not edit `Update Log` directly.
+7. **Resolve teacher confirmations**: write a concrete question in the blocker/confirmation field and expose it in the confirmation view. After a decision, record the conclusion in the research plan or latest progress and clear the confirmation field.
+8. **Maintain dates before reporting**: members keep progress current and review current-stage deadlines before report generation. `This Week` includes only unfinished tasks with explicit deadlines in the current week.
+9. **Build reports from three views**: read `This Week`, `Teacher Confirmation`, and `Recent 4 Weeks Completed`. Generate a report only when all three reads succeed, then either preview it with a designated member or send it to the group according to team settings.
 
 ## Owner Assignment And Member Participation
 
@@ -141,11 +163,18 @@ The template separates accountability from participation:
 - The existing owner field or comma-separated collaborator text cannot produce exact per-member workload counts. Do not label those groupings as collaborator-inclusive workload statistics.
 - When exact counts are required, optionally create a normalized `Member Assignment` table with one row per task-member-role. Before adding it, confirm whether the bot/CLI, a Workflow, or a human maintainer will keep it synchronized, and explain that Workflow synchronization may consume additional monthly runs. The default lightweight template does not create this table.
 
-Example private message:
+Example private fragment note to the bot:
 
 ```text
-Turn the following instructions into a task-table draft. Do not upload yet.
-I will confirm before you write to the tracker.
+Record this task fragment for now. Do not create a table or upload it yet:
+Task A came up during an in-person discussion; owner and timing still need confirmation.
+```
+
+Then ask Codex:
+
+```text
+Classify these fragment notes and additional context into a formal task-table draft.
+Do not upload yet; I will review it before Lark CLI writes to the tracker.
 ```
 
 Example group update:
@@ -212,24 +241,24 @@ When team members can edit the main task table directly, enable a Base Workflow 
 Confirm these decisions with the user during setup:
 
 1. Who can edit the main task table, usually the lab or group members.
-2. Who can edit `Update Log`, normally the coordinator, owner, bot, or service account; ordinary members should be read-only.
+2. Who can edit `Update Log`, normally the Base owner, user-selected maintainers, bot, or service account; ordinary members should be read-only.
 3. Which field changes must be archived. At minimum, consider status, latest progress, teacher confirmation, owner, collaborators, deadline, deliverable, and research plan.
-4. The coordinator's display name and stable user ID. The display name is used in the audit table; the ID is used only in Workflow conditions and must not be committed to the reusable template.
+4. Whether one designated maintainer needs special attribution. If so, use the display name in audit rows and the stable user ID only in Workflow conditions. Otherwise record the actual modifier for every human edit. Never commit real identities to the reusable template.
 5. The label for machine edits, such as `Feishu CLI` or `Lark CLI`.
 
 Recommended implementation:
 
 1. Add internal `Status Snapshot` and `Update Source` fields to the main task table.
 2. CLI/bot writes set `Update Source` in the same task update; manual edits leave it empty.
-3. Split the Workflow into three branches: CLI/bot, the designated coordinator, and other members.
+3. Split the Workflow into at least two source paths: CLI/bot and human edits. Add a designated-maintainer branch only when the user requests special attribution.
 4. Each branch creates its own `Update Log` row. Machine edits use a generic machine label; manual edits use the member's display name rather than a numeric account alias or internal ID.
-5. Each branch has its own cleanup step that syncs `Status Snapshot` and clears `Update Source`.
+5. Every configured branch has its own cleanup step that syncs `Status Snapshot` and clears `Update Source`.
 6. Hide both internal fields from all routine views.
-7. Read the Workflow definition back after saving and verify that all branch links remain present and the Workflow is enabled.
+7. Read the Workflow definition back after saving and verify that every configured branch link remains present and the Workflow is enabled.
 
-Nested Workflow branches may drop a shared cleanup node. This template therefore uses three equivalent but independent cleanup nodes. API or bot writes may not trigger Workflow in every tenant. When they do not, the bot or CLI operation must append the update-log row, sync the status snapshot, and clear the update source in the same confirmed operation.
+Nested Workflow branches may drop a shared cleanup node. Give each source path an equivalent but independent cleanup node. API or bot writes may not trigger Workflow in every tenant. When they do not, the bot or CLI operation must append the update-log row, sync the status snapshot, and clear the update source in the same confirmed operation.
 
-Treat `Update Log` as an audit table. Ordinary members should not manually edit or delete it. Repairs should be performed by the owner, coordinator, or bot/service account and documented in the notes.
+Treat `Update Log` as an audit table. Ordinary members should not manually edit or delete it. Repairs should be performed by the Base owner, a user-selected maintainer, or the bot/service account and documented in the notes.
 
 ## Requirements
 
@@ -274,7 +303,7 @@ For automatic chat reading and Base updates, verify that:
 - The bot or its execution identity can access and edit the Base.
 - High-impact actions still require human confirmation, including task creation, owner or deadline changes, completion, and deletion.
 
-Without a fully executable bot, use it as a reminder and drafting assistant: the bot proposes structured changes and a human coordinator approves and applies them.
+Without a fully executable bot, use it as a reminder and fragment-capture assistant. Any authorized member can then structure the notes in Codex, review the draft, and apply the confirmed update through Lark CLI.
 
 ## Scheduled Weekly Report
 

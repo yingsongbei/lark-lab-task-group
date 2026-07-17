@@ -227,7 +227,7 @@ Default model:
 
 1. `Task Register`: ordinary group members may edit if the lab wants direct progress updates.
 2. `Update Log`: ordinary group members are read-only.
-3. `Update Log` write access: keep only for the Base owner, the student/lab coordinator, named maintainers, and the bot or service account that writes audit rows.
+3. `Update Log` write access: keep only for the Base owner, user-selected maintainers, and the bot or service account that writes audit rows.
 4. Public link sharing: use tenant-only access by default and disable external sharing unless the user explicitly asks otherwise.
 
 If the CLI cannot assign every role member in the current tenant, create the roles and table permissions with CLI where possible, then clearly tell the user which people or bots must be assigned in the Feishu/Lark UI.
@@ -236,7 +236,7 @@ If the CLI cannot assign every role member in the current tenant, create the rol
 
 When members are allowed to edit `Task Register` directly, configure a Base Workflow so manual changes still create update history.
 
-Use the source-aware topology in `audit-workflow.md`. It distinguishes CLI/bot writes, the configured coordinator's manual edits, and other members' manual edits. Every branch must use its own cleanup action to sync `Status Snapshot` and clear `Update Source`; independently read the saved workflow back because nested branches may silently discard a shared cleanup node.
+Use the source-aware topology in `audit-workflow.md`. It distinguishes CLI/bot writes from human edits and optionally recognizes a user-selected designated maintainer. Every configured branch must use its own cleanup action to sync `Status Snapshot` and clear `Update Source`; independently read the saved workflow back because nested branches may silently discard a shared cleanup node.
 
 Hide `Status Snapshot` and `Update Source` from `Task Entry`, `Status-Sorted Table`, `Overview Kanban`, `Teacher Confirmation`, `Owner Assignment`, `Member Participation`, and every other routine view.
 

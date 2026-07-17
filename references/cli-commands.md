@@ -234,7 +234,7 @@ Recommended default:
 
 - `Task Register` / `任务总表`: group members can edit if direct progress updates are expected.
 - `Update Log` / `更新记录`: ordinary members are read-only.
-- Update-log writers: Base owner, student/lab coordinator, named maintainers, and the bot or service account.
+- Update-log writers: Base owner, user-selected maintainers, and the bot or service account.
 
 Enable advanced permissions:
 
@@ -267,7 +267,7 @@ lark-cli base +role-update --as user --base-token BASE_TOKEN --role-id MEMBER_RO
   --json "@member-role-update.json" --yes --format json
 ```
 
-For a coordinator or bot/service-account role, keep both tables editable:
+For a designated-maintainer or bot/service-account role, keep both tables editable:
 
 ```json
 {
@@ -296,7 +296,7 @@ Use this when ordinary members may directly edit `任务总表`. Read `audit-wor
 lark-cli base +field-list --as user --base-token BASE_TOKEN --table-id TASK_TABLE_ID --format json
 ```
 
-Build three attribution paths: machine source, configured coordinator, and other member. Give each path its own cleanup `SetRecordAction` that syncs `状态快照` and clears `更新来源`. Do not point nested branches at one shared cleanup node; the service may silently remove those links.
+Build at least two attribution paths: machine source and human editor. Add a separate designated-maintainer path only when the user requests special attribution. Give every configured path its own cleanup `SetRecordAction` that syncs `状态快照` and clears `更新来源`. Do not point nested branches at one shared cleanup node; the service may silently remove those links.
 
 Create and enable the workflow:
 
