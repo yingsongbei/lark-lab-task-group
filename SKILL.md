@@ -1,6 +1,11 @@
 ---
 name: lark-lab-task-group
 description: "Build a Feishu/Lark research-lab task group from zero to one using lark-cli: create or locate a group chat, add/brief a bot, create a Base task tracker, configure fields/categories/views/permissions, post the tracker to the group, and set lightweight rules for task intake, progress updates, teacher confirmation, weekly reminders, and summaries. Use when researchers want a reusable lab task-management template in Feishu/Lark, especially for student-supervisor groups, wet-lab workflows, sample submission tracking, planting/experiment schedules, and multi-person progress coordination."
+metadata:
+  requires:
+    bins: ["lark-cli"]
+    siblings: ["lark-shared", "lark-base", "lark-drive", "lark-im"]
+  cliHelp: "lark-cli --help"
 ---
 
 # Lark Lab Task Group
@@ -18,6 +23,13 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
 
 ## Workflow
 
+0. Run the first-use preflight and resume safely:
+   - Read `references/getting-started.md` when the user is installing this skill for the first time, `lark-cli` is missing, authentication is incomplete, or required companion skills are unavailable.
+   - Verify Node.js/npm, `lark-cli`, and the official companion skills `lark-shared`, `lark-base`, `lark-drive`, and `lark-im`. Treat `lark-contact` as optional unless member identity resolution is needed.
+   - Explain that the CLI developer app/user authorization and the group-facing bot are two separate components. Do not assume that installing this skill creates or invites a bot.
+   - Before creating anything, search for an existing target group, Base, tables, views, roles, and Workflow. If setup was interrupted, continue from the existing resources instead of creating duplicates.
+   - Present missing prerequisites and browser/manual checkpoints plainly. Do not claim end-to-end readiness until the CLI, authorization, companion skills, and required manual bot steps have been verified.
+
 1. Confirm scope with the user:
    - Existing group or create a new group?
    - Existing bot or add/invite one? The lab must provide or create the intelligent bot itself; this skill briefs the bot and wires permissions/workflow around it.
@@ -30,6 +42,7 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
    - Whether messages to the group must be previewed for user approval before sending.
 
 2. Prepare Feishu/Lark CLI:
+   - If `lark-cli` or the companion skills are missing, follow `references/getting-started.md`; do not improvise an installation command.
    - Run `lark-cli doctor`.
    - Prefer `--as user` for creating Base files, granting permissions, and sending messages as the user.
    - If user identity is missing, run device-flow auth. Show the authorization URL and QR code, then wait for the user to confirm before continuing.
@@ -39,8 +52,10 @@ Always protect privacy. Do not include real gene names, sample names, unpublishe
    - Search by group name with `lark-cli im +chat-search`.
    - If the user asks to create a group, use `lark-cli im +chat-create`.
    - Read the real `chat_id`; never guess it.
+   - Reuse a matching existing group after confirming it with the user. Never create a second group merely because a prior run stopped midway.
 
 4. Create the Base:
+   - Search the user's drive for a matching Base before creation. Inspect its tables and schema; reuse and repair a partial setup when it is clearly the intended tracker.
    - Create a Base named like `<Lab/Project> Task Tracker`.
    - Create the first table named `Task Register`.
    - Use the schema in `references/base-template.md`.
@@ -129,6 +144,7 @@ Use these default operating rules unless the user says otherwise:
 
 Read only the needed reference file:
 
+- `references/getting-started.md`: first-use installation, authentication, component boundaries, preflight, resume behavior, and troubleshooting.
 - `references/base-template.md`: Base table fields, category options, view order, and example anonymous rows.
 - `references/cli-commands.md`: lark-cli command patterns with placeholders.
 - `references/bot-brief.md`: reusable bot instruction message and weekly summary format.

@@ -30,17 +30,50 @@ It is designed for student-supervisor groups, wet-lab teams, sample-submission c
   - Stop instead of sending a partial report when a required read fails
 - Convert free-form instructions from supervisors or team members into structured task records.
 
-## Installation
+## First-Time Setup
 
-Clone this repository into the Codex skills directory:
+The skill installer can discover this repository directly, but **installing this skill alone does not provide Feishu/Lark API access**. A first-time setup needs four parts:
+
+1. A skill-capable agent such as Codex or Claude Code.
+2. Node.js 16 or newer with npm/npx.
+3. The official `lark-cli` and official Lark companion skills.
+4. A configured and authorized Feishu/Lark developer app. A separately created or connected group bot is also required for in-chat automation.
+
+Install in this order. Replace `<REPOSITORY_URL>` with the URL shown on this repository page:
 
 ```powershell
-git clone <REPOSITORY_URL> "$env:USERPROFILE\.codex\skills\lark-lab-task-group"
+npx @larksuite/cli@latest install
+npx skills add larksuite/cli -g -y
+npx skills add <REPOSITORY_URL> -g -y
 ```
 
-If a directory with the same name already exists, back it up or remove it before cloning the new version.
+Restart the agent after installation so it discovers the new skills. Then configure and authorize Lark CLI:
+
+```powershell
+lark-cli config init
+lark-cli auth login --recommend
+lark-cli auth status
+lark-cli doctor
+```
+
+Configuration and login may open a browser or require organization approval. Never commit app secrets, access tokens, user IDs, or Base tokens, and never post them in a public issue.
+
+Omit `-g` for a project-local installation. A manual clone into an agent's skills directory remains a fallback, but the skill installer provides clearer discovery and layout validation.
+
+See [references/getting-started.md](references/getting-started.md) for the full first-use checklist, component boundaries, resumable setup rules, and troubleshooting.
 
 ## Usage
+
+For the first run, ask the agent to perform only the preflight before it creates or sends anything:
+
+```text
+Use $lark-lab-task-group. Run the first-use preflight first. Verify the CLI,
+official Lark companion skills, authorization, existing group/Base resources,
+and group-bot availability. Show me any missing or manual steps. Do not create
+or send anything until I confirm the setup summary.
+```
+
+After the preflight passes, ask for the full setup:
 
 Ask Codex to use the skill:
 
@@ -138,9 +171,11 @@ Treat `Update Log` as an audit table. Ordinary members should not manually edit 
 
 ## Requirements
 
-Install and configure `lark-cli` locally:
+This skill requires the official `lark-cli` and the official `lark-shared`, `lark-base`, `lark-drive`, and `lark-im` companion skills. `lark-contact` is optional and used for member identity resolution. Recheck the CLI with:
 
 ```powershell
+lark-cli --version
+lark-cli auth status
 lark-cli doctor
 ```
 
@@ -156,6 +191,13 @@ If user identity is unavailable, the skill guides the agent through Feishu/Lark 
 ## Group Bot
 
 This skill defines the bot's responsibilities, drafts the bot brief, and integrates the bot into the group workflow. The user must still create or connect the intelligent bot itself.
+
+Keep these two identities distinct:
+
+- The `lark-cli` developer app and user authorization let Codex or another agent build and maintain groups, Drive resources, and Base data through APIs.
+- The group-facing bot is mentioned by members, sends reminders, and may trigger task organization. It must be created, invited, and authorized separately.
+
+They may share a backend integration or remain independent. Do not assume that installing the CLI creates a group bot, and do not expose a high-permission CLI identity to an untrusted group.
 
 Possible bot implementations include:
 
@@ -306,6 +348,7 @@ lark-lab-task-group/
   agents/
     openai.yaml
   references/
+    getting-started.md
     base-template.md
     audit-workflow.md
     bot-brief.md

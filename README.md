@@ -29,17 +29,49 @@
   - 每周定时提醒和总结，并在读取失败时停止发送残缺周报
 - 将老师或同学的自然语言安排整理成结构化任务记录。
 
-## 安装
+## 首次使用
 
-把本仓库复制到 Codex skills 目录，例如：
+这个仓库可以直接被 Skill 安装器识别，但**只安装本 Skill 还不能直接操作飞书**。首次使用需要四部分：
+
+1. Codex、Claude Code 等支持 Skill 的智能体。
+2. Node.js 16 或更高版本，以及 npm/npx。
+3. 飞书官方 `lark-cli` 和官方飞书配套 Skills。
+4. 已配置并授权的飞书开发者应用；如需群内自动响应，还要另行创建或接入群机器人。
+
+推荐按以下顺序安装。把 `<REPOSITORY_URL>` 替换为当前仓库页面显示的地址：
 
 ```powershell
-git clone <REPOSITORY_URL> "$env:USERPROFILE\.codex\skills\lark-lab-task-group"
+npx @larksuite/cli@latest install
+npx skills add larksuite/cli -g -y
+npx skills add <REPOSITORY_URL> -g -y
 ```
 
-如果已经有同名目录，可以先备份或删除旧目录后再复制。
+安装后重启智能体，让它重新发现 Skills。然后配置和授权飞书 CLI：
+
+```powershell
+lark-cli config init
+lark-cli auth login --recommend
+lark-cli auth status
+lark-cli doctor
+```
+
+其中 `config init` 和登录授权可能会打开浏览器，也可能需要组织管理员确认。不要把应用密钥、访问令牌、用户 ID 或多维表格 token 写进仓库或公开 Issue。
+
+如果只想安装到当前项目，去掉 `-g` 即可。手动复制到 Skills 目录仍然可用，但不如上面的安装方式容易检查完整性。
+
+完整的首次使用、权限边界、断点续建和排错说明见 [references/getting-started.md](references/getting-started.md)。
 
 ## 使用方式
+
+建议第一次先让智能体只做检查，不立即创建或发送内容：
+
+```text
+使用 $lark-lab-task-group，先执行首次使用检查：确认 CLI、官方飞书配套 Skills、
+账号授权、已有群/多维表格和群机器人是否就绪。列出缺失和需要我手动完成的步骤，
+在我确认检查结果前不要创建或发送任何内容。
+```
+
+检查通过后，再提出完整搭建请求：
 
 在 Codex 中提出类似请求：
 
@@ -143,9 +175,11 @@ Use $lark-lab-task-group to set up a Feishu research group task tracker for our 
 
 ## 依赖
 
-需要本地已经安装并配置 `lark-cli`：
+本 Skill 依赖官方 `lark-cli`，以及 `lark-shared`、`lark-base`、`lark-drive`、`lark-im` 四个官方配套 Skill；需要解析成员身份时再使用可选的 `lark-contact`。可用以下命令复查：
 
 ```powershell
+lark-cli --version
+lark-cli auth status
 lark-cli doctor
 ```
 
@@ -161,6 +195,13 @@ lark-cli doctor
 ## 群内机器人说明
 
 这个 skill 会帮你设计机器人职责、生成 @ 机器人的说明话术，并把机器人纳入任务群工作流；但**群内智能机器人本体需要使用者自己创建或接入**。
+
+请区分两个身份：
+
+- `lark-cli` 的开发者应用和用户授权：供 Codex 等智能体通过 API 搭建和维护群、云盘与多维表格。
+- 群内机器人：供成员在飞书群里 @、接收提醒和触发任务整理；它需要单独创建、拉群和授权。
+
+两者可以由同一套后端服务连接，也可以完全独立。不要默认 CLI 安装完成就已经有群机器人，也不要把拥有高权限的 CLI 身份暴露给不受信任的群成员。
 
 可选方式包括：
 
@@ -306,6 +347,7 @@ lark-lab-task-group/
   agents/
     openai.yaml
   references/
+    getting-started.md
     base-template.md
     audit-workflow.md
     bot-brief.md
