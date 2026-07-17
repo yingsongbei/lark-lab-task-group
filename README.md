@@ -42,15 +42,11 @@
 
 ```powershell
 npx @larksuite/cli@latest install
-npx skills add larksuite/cli -g -y --skill lark-shared lark-base lark-drive lark-im
+npx skills add larksuite/cli -g -y --skill lark-shared lark-base lark-drive lark-im lark-contact
 npx skills add <REPOSITORY_URL> -g -y
 ```
 
-需要按姓名解析成员身份时，再选装 `lark-contact`：
-
-```powershell
-npx skills add larksuite/cli -g -y --skill lark-contact
-```
+这条命令只安装本模板需要的 5 个官方配套 Skill，不会安装日历、邮件、审批、会议等其他模块。安装 Skill 本身不会自动获得对应飞书权限；实际权限仍由后续账号授权决定。
 
 安装后重启智能体，让它重新发现 Skills。然后配置和授权飞书 CLI：
 
@@ -229,7 +225,7 @@ flowchart TD
 
 ## 依赖
 
-本 Skill 依赖官方 `lark-cli`，以及 `lark-shared`、`lark-base`、`lark-drive`、`lark-im` 四个官方配套 Skill；需要解析成员身份时再使用可选的 `lark-contact`。可用以下命令复查：
+本 Skill 依赖官方 `lark-cli`，以及 `lark-shared`、`lark-base`、`lark-drive`、`lark-im`、`lark-contact` 五个官方配套 Skill。它们分别负责登录授权、多维表格、云盘、群聊消息和成员身份解析。可用以下命令复查：
 
 ```powershell
 lark-cli --version
@@ -242,7 +238,7 @@ lark-cli doctor
 - `base`
 - `drive`
 - `im`
-- `contact`，可选，用于解析成员身份
+- `contact`，用于解析成员身份、负责人和权限对象
 
 如果用户身份缺失，skill 会引导智能体通过飞书设备流授权，并显示授权链接和二维码。
 

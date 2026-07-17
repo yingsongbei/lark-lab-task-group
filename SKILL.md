@@ -4,7 +4,7 @@ description: "Build a Feishu/Lark research-lab task group from zero to one using
 metadata:
   requires:
     bins: ["lark-cli"]
-    siblings: ["lark-shared", "lark-base", "lark-drive", "lark-im"]
+    siblings: ["lark-shared", "lark-base", "lark-drive", "lark-im", "lark-contact"]
   cliHelp: "lark-cli --help"
 ---
 
@@ -37,7 +37,7 @@ Use this operating model by default unless the user chooses another one:
 
 0. Run the first-use preflight and resume safely:
    - Read `references/getting-started.md` when the user is installing this skill for the first time, `lark-cli` is missing, authentication is incomplete, or required companion skills are unavailable.
-   - Verify Node.js/npm, `lark-cli`, and the official companion skills `lark-shared`, `lark-base`, `lark-drive`, and `lark-im`. Treat `lark-contact` as optional unless member identity resolution is needed.
+   - Verify Node.js/npm, `lark-cli`, and the official companion skills `lark-shared`, `lark-base`, `lark-drive`, `lark-im`, and `lark-contact`.
    - Explain that the CLI developer app/user authorization and the group-facing bot are two separate components. Do not assume that installing this skill creates or invites a bot.
    - Before creating anything, search for an existing target group, Base, tables, views, roles, and Workflow. If setup was interrupted, continue from the existing resources instead of creating duplicates.
    - Present missing prerequisites and browser/manual checkpoints plainly. Do not claim end-to-end readiness until the CLI, authorization, companion skills, and required manual bot steps have been verified.
@@ -58,7 +58,7 @@ Use this operating model by default unless the user chooses another one:
    - Run `lark-cli doctor`.
    - Prefer `--as user` for creating Base files, granting permissions, and sending messages as the user.
    - If user identity is missing, run device-flow auth. Show the authorization URL and QR code, then wait for the user to confirm before continuing.
-   - If scopes are missing, request only the needed domains first: `base`, `drive`, `im`, and optionally `contact`.
+   - If scopes are missing, request only the needed domains first: `base`, `drive`, `im`, plus `contact` when resolving member names, owners, or identity-based permissions.
 
 3. Create or locate the group:
    - Search by group name with `lark-cli im +chat-search`.

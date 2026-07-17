@@ -43,15 +43,11 @@ Install in this order. Replace `<REPOSITORY_URL>` with the URL shown on this rep
 
 ```powershell
 npx @larksuite/cli@latest install
-npx skills add larksuite/cli -g -y --skill lark-shared lark-base lark-drive lark-im
+npx skills add larksuite/cli -g -y --skill lark-shared lark-base lark-drive lark-im lark-contact
 npx skills add <REPOSITORY_URL> -g -y
 ```
 
-Install `lark-contact` separately when member-name resolution is needed:
-
-```powershell
-npx skills add larksuite/cli -g -y --skill lark-contact
-```
+This installs only the five official companion skills required by the template. It does not install unrelated calendar, mail, approval, or meeting modules. Installing a skill does not grant its Feishu/Lark scopes; actual access still depends on subsequent account authorization.
 
 Restart the agent after installation so it discovers the new skills. Then configure and authorize Lark CLI:
 
@@ -227,7 +223,7 @@ Treat `Update Log` as an audit table. Ordinary members should not manually edit 
 
 ## Requirements
 
-This skill requires the official `lark-cli` and the official `lark-shared`, `lark-base`, `lark-drive`, and `lark-im` companion skills. `lark-contact` is optional and used for member identity resolution. Recheck the CLI with:
+This skill requires the official `lark-cli` and five official companion skills: `lark-shared`, `lark-base`, `lark-drive`, `lark-im`, and `lark-contact`. They cover authentication, Base, Drive, group messaging, and member identity resolution. Recheck the CLI with:
 
 ```powershell
 lark-cli --version
@@ -240,7 +236,7 @@ Common authorization domains:
 - `base`
 - `drive`
 - `im`
-- `contact`, optional, for resolving member identities
+- `contact`, for resolving member identities, owners, and permission subjects
 
 If user identity is unavailable, the skill guides the agent through Feishu/Lark device-flow authorization and displays the authorization link and QR code.
 

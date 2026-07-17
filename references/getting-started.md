@@ -27,15 +27,11 @@ Run the following in a terminal. Replace `<REPOSITORY_URL>` with the URL of this
 
 ```powershell
 npx @larksuite/cli@latest install
-npx skills add larksuite/cli -g -y --skill lark-shared lark-base lark-drive lark-im
+npx skills add larksuite/cli -g -y --skill lark-shared lark-base lark-drive lark-im lark-contact
 npx skills add <REPOSITORY_URL> -g -y
 ```
 
-The second command installs only the required official companion skills. Add the optional identity-resolution skill when needed:
-
-```powershell
-npx skills add larksuite/cli -g -y --skill lark-contact
-```
+The second command installs only the five required official companion skills: authentication, Base, Drive, group messaging, and member identity resolution. It does not install unrelated Lark modules. Installing these skills does not grant API scopes; actual access still depends on account authorization.
 
 Restart the agent after installation so it discovers the new skills.
 
@@ -52,7 +48,7 @@ lark-cli auth status
 lark-cli doctor
 ```
 
-An agent creating a new developer app may use `lark-cli config init --new`, but browser confirmation and organization approval can still require the user. Request only the domains needed for this workflow: `base`, `drive`, `im`, and optionally `contact`.
+An agent creating a new developer app may use `lark-cli config init --new`, but browser confirmation and organization approval can still require the user. Request only the domains needed for this workflow: `base`, `drive`, `im`, plus `contact` when resolving member names, owners, or identity-based permissions.
 
 Never ask a user to paste app secrets, access tokens, open IDs, or Base tokens into the repository or a public issue.
 
