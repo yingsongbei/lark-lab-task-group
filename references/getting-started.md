@@ -13,6 +13,8 @@ Keep these components separate in both explanations and permission decisions:
 
 Installing this repository does not create a developer app, authorize a Feishu/Lark account, create a group bot, or grant the bot access to a Base.
 
+The group-facing bot's displayed identity may differ from the developer app, CLI identity, service account, or other identity that actually writes Base records. Resolve and test the execution identity instead of granting access to whichever bot or app is easiest to find.
+
 ## Requirements
 
 - Node.js 16 or newer, with npm/npx available.
@@ -52,6 +54,18 @@ An agent creating a new developer app may use `lark-cli config init --new`, but 
 
 Never ask a user to paste app secrets, access tokens, open IDs, or Base tokens into the repository or a public issue.
 
+## Bot Write Access Has Three Layers
+
+A bot is ready to update the tracker only when all three layers pass:
+
+1. **App/API authorization**: the bot runtime has the message, Base, Drive, and identity scopes needed for its approved operations.
+2. **Document and Base role**: the real execution identity is a Base collaborator and, when advanced permissions are enabled, belongs to a role that can edit `Task Register` and append `Update Log`.
+3. **Runtime tool policy**: the bot platform or agent runtime exposes only the approved read/write tools. Base sharing does not create or change this allowlist.
+
+For routine progress reports from group members, use a least-privilege runtime policy. Allow task lookup; confirmed updates to `Status`, `Latest Progress`, and internal source/snapshot fields; and append-only linked update-log writes. Deny task creation/deletion, owner/deadline/teacher-confirmation changes, other task fields, schema/views, Workflow, and permission administration unless a separate authorized workflow explicitly allows them.
+
+Bind every write to the exact preview confirmed in the same conversation or message thread. Test through the group bot itself: first read one known task, then preview and confirm one harmless progress update, then verify both the task row and its linked audit row. Do not report readiness after testing only with the CLI account.
+
 ## Agent Preflight
 
 Before creating any Feishu/Lark resource, the agent must report these checks:
@@ -64,6 +78,9 @@ Before creating any Feishu/Lark resource, the agent must report these checks:
 | Scopes | Base, Drive, and IM operations required by the requested setup are authorized |
 | Existing resources | The target group and drive have been searched for a prior or partial setup |
 | Group bot | The user has identified an existing bot or accepted that bot setup remains manual |
+| Bot execution identity | The identity that actually performs group-triggered writes has been resolved |
+| Bot Base access | That execution identity can edit `Task Register` and append `Update Log` under the active Base role |
+| Bot runtime tools | The narrow progress-update allowlist is configured and a group-triggered read/write/log test passes |
 | Approval mode | The user has chosen whether group messages and task writes require preview and confirmation |
 
 If a check fails, stop at that checkpoint, explain the exact user action, and continue after it is resolved. Do not pretend that the full setup is ready.
@@ -88,6 +105,7 @@ Some steps may require the Feishu/Lark browser or desktop UI:
 - Completing user authorization or organization approval.
 - Creating or connecting the group-facing bot and inviting it to the group.
 - Granting advanced Base roles when the CLI cannot assign every role member.
+- Configuring the bot platform's runtime tool allowlist; this is separate from Base sharing and may live in Aily, the custom bot service, or the connected agent platform.
 - Configuring a paid or tenant-specific automation feature when Workflow capabilities differ.
 
 The agent must distinguish completed API work from these remaining manual steps.
@@ -100,6 +118,8 @@ The agent must distinguish completed API work from these remaining manual steps.
 - Keep the update log read-only for ordinary members.
 - Do not expose a high-permission CLI identity or bot to untrusted groups.
 - Require human confirmation before task creation, ownership or deadline changes, completion, deletion, and group-message sending when the user selects approval-first mode.
+- For an ordinary group progress report, preview only task name, status, and latest progress. Do not infer teacher-confirmation items or unrelated questions.
+- Bind confirmation to the exact preview and same conversation/thread; re-preview after any change.
 
 ## Troubleshooting
 
@@ -111,7 +131,10 @@ The agent must distinguish completed API work from these remaining manual steps.
 | `auth status` has no usable user identity | Run `lark-cli auth login --recommend` and complete browser/device authorization |
 | A command reports missing scope | Authorize only the named domain, then retry the failed step |
 | A rerun creates duplicates | Stop creation, search by name and IDs, and resume from the existing group/Base |
-| The bot is in the group but cannot update Base | Share the Base with the bot's execution identity and verify Base edit permission |
+| The bot is in the group but cannot update Base | Identify the actual writing identity; verify app scopes, collaborator access, advanced Base role, and runtime write tools separately |
+| The bot can read Base but says its tools are unavailable | Configure the bot/agent runtime allowlist; changing Base sharing alone will not expose tools |
+| The bot writes too many fields or invents questions | Apply the minimal progress-update prompt and restrict runtime writes to status, latest progress, source/snapshot cleanup, and append-only audit logging |
+| The bot says an update succeeded but the row did not change | Treat the run as failed, inspect runtime logs and permissions, then verify both the task row and linked update-log row before retrying |
 | Manual edits are not logged | Verify the Workflow is enabled, its trigger fields and branches exist, and the tenant triggers Workflow for that edit source |
 | CLI/API edits are not logged | Append the update-log row in the same confirmed CLI operation as the task change |
 

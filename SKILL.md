@@ -33,6 +33,7 @@ Use this operating model by default unless the user chooses another one:
 - Treat `Update Log` as an append-only audit trail for ordinary members.
 - Use a draft-first loop before every agent-assisted task write. Send group messages only according to the user's chosen approval mode.
 - Also let members edit `Task Register` directly or report progress by mentioning the bot. Archive every path through Workflow or an explicit bot/CLI log write.
+- For an existing-task progress report made by mentioning the bot, use the minimal progress-update protocol: identify one task, preview only `Task Name`, proposed `Status`, and proposed `Latest Progress`, then ask only whether to upload. Do not turn routine progress into a new task or a new teacher-confirmation question.
 - Before a weekly report, ask members to maintain current-stage deadlines. Build the report only from the three validated dynamic views.
 
 ## Workflow
@@ -54,6 +55,7 @@ Use this operating model by default unless the user chooses another one:
    - Whether the weekly report should include the default three views: `This Week`, `Teacher Confirmation`, and `Recent 4 Weeks Completed`.
    - Whether one designated maintainer needs special audit attribution. If yes, resolve that person's display name and stable Feishu/Lark user ID at deployment time; otherwise attribute every human edit to the actual modifier. Never store deployment identities in reusable skill files.
    - Whether messages to the group must be previewed for user approval before sending.
+   - Whether the group-facing bot may write routine progress itself. If yes, confirm the exact execution identity and the narrow runtime operations it may use; Base sharing alone is not a tool authorization policy.
 
 2. Prepare Feishu/Lark CLI:
    - If `lark-cli` or the companion skills are missing, follow `references/getting-started.md`; do not improvise an installation command.
@@ -84,6 +86,8 @@ Use this operating model by default unless the user chooses another one:
    - Grant the group chat `edit` permission when the lab members should update tasks themselves.
    - Set public link sharing conservatively, usually `tenant_readable`, with external sharing disabled.
    - If advanced Base permissions are available, allow ordinary members to edit `Task Register` but make `Update Log` read-only. Keep `Update Log` edit/write access only for the Base owner, user-selected maintainers, and bot or service account. If role-member assignment is not fully exposed by CLI, tell the user exactly what must be finished in the Feishu/Lark UI.
+   - Resolve the real execution identity used by the group-facing bot. Do not assume that the CLI developer app, the bot displayed in the chat, and the account writing Base records are the same identity.
+   - Verify three independent layers for bot writes: required app/API scopes, Base collaborator plus advanced-role access, and the bot runtime's tool allowlist. Passing one layer does not prove the other two are ready.
    - Report the permission model plainly to the user.
 
 6. Configure views:
@@ -102,7 +106,10 @@ Use this operating model by default unless the user chooses another one:
 7. Brief the bot:
    - Search group bots and get the real bot open_id.
    - If no bot exists, tell the user to create/invite one first. Options include Feishu/Lark Aily-style bots, a custom Feishu/Lark app bot, or an external agent such as Codex/Claude Code connected to Feishu/Lark through an approved bot/app integration.
-   - If the bot is expected to update the Base itself, ensure it has message-read/message-send access, Base access, and permission to edit the tracker. If not, keep it as an assistant that proposes updates for a human to confirm.
+   - If the bot is expected to update the Base itself, ensure its actual execution identity has message-read/message-send access, Base collaborator access, and an advanced Base role that can edit `Task Register` and append `Update Log`. If not, keep it as an assistant that proposes updates for a human to confirm.
+   - Separately configure a least-privilege runtime tool allowlist for member-triggered progress updates. Allow reading/searching existing tasks; updating only `Status`, `Latest Progress`, and the internal `Update Source`; appending and linking an `Update Log` row; and syncing `Status Snapshot` plus clearing `Update Source`. Deny task creation/deletion, owner/deadline/teacher-confirmation changes, other fields, views, Workflow, and permissions unless a separately authorized workflow explicitly permits them.
+   - Bind write approval to the exact preview in the same conversation or message thread. If the preview changes, ask for confirmation again. A generic confirmation from another context must not authorize the write.
+   - Run one read test and one confirmed write-plus-log test through the group bot's real runtime before calling it ready. Document access and runtime tool access must both pass.
    - Draft the bot instruction message using `references/bot-brief.md`.
    - For a scheduled weekly report, read `references/weekly-automation.md`. Replace the whole scheduled prompt in one operation, use direct executable instructions and full CLI flags, and never send a partial prompt assembled across multiple chat messages.
    - If the user has requested approval-before-send, show the draft in chat and wait for confirmation before sending.
@@ -146,7 +153,12 @@ Use these default operating rules unless the user says otherwise:
 - Prefer natural-language, draft-first updates in Codex followed by confirmed batch writes through `lark-cli`, especially for multiple changes.
 - The bot can capture fragment notes privately and extract proposed tasks or progress from group chat.
 - Members may also update routine progress directly in the Base or mention the bot in the group.
-- The bot should ask for confirmation before creating new tasks, changing owner/deadline, marking complete, deleting records, or changing a task to/from teacher-confirmation status.
+- For a group mention that reports progress on one existing task, first match exactly one existing record. If multiple records match, ask only which task was meant; do not ask experimental follow-up questions.
+- Return a minimal preview containing only task name, proposed status, and proposed latest progress. Rewrite only facts the member stated. Do not infer follow-up work, sample counts, interpretations, blockers, or questions.
+- Map explicit `completed` language to `Completed`; map `in progress`, `submitted`, `results returned`, or `being analyzed` to `In Progress`; otherwise preserve the existing status. The upload confirmation is also the required confirmation for a completion mark.
+- Do not create, clear, or modify `Teacher Confirmation` unless the member explicitly mentions a teacher/supervisor decision or supplies the confirmation question. Silence about the teacher means leave the field unchanged.
+- After the preview, ask only whether to upload. On explicit confirmation, update only the approved fields, set the machine update source, and append the linked update-log row. If writing tools or permissions are unavailable, say that no write occurred and name the missing access; never imply success.
+- The bot should ask for a separate expanded confirmation before creating new tasks, changing owner/deadline, deleting records, or changing a task to/from teacher-confirmation status.
 - An authorized member confirms ambiguous instructions by restating task goal, owner, deadline, deliverable, and confirmation points.
 - For agent-assisted task entry, use a strict draft-first loop: draft table -> user edits -> revised table -> explicit upload confirmation -> Base write. Never skip the preview table.
 - For confirmed updates, keep `Task Register` as the current state and append every change to `Update Log`; do not use the main task row as the long-form history archive.

@@ -184,6 +184,31 @@ Example group update:
 Please structure the update and confirm whether it should be written to the tracker.
 ```
 
+## Minimal Group-Bot Progress Updates
+
+When a group member mentions the bot with progress on one existing task, the bot enters minimal-update mode. It must not turn a routine report into a full task-planning discussion.
+
+Return only:
+
+```text
+[Proposed update]
+| Task | Proposed status | Proposed latest progress |
+|---|---|---|
+| Task A | In Progress | Testing results have been returned. |
+
+Confirm upload to the tracker?
+```
+
+Default rules:
+
+1. Match exactly one existing task. Ask only for the task name when no unique match exists.
+2. Rewrite only facts the member stated. Do not invent interpretation, next steps, sample counts, blockers, or new questions.
+3. Map explicit `completed/done` language to `Completed`; map `in progress/submitted/results returned/being analyzed` language to `In Progress`; otherwise preserve the current status.
+4. Unless the member explicitly states that a supervisor decision is needed, do not add, clear, or change `Teacher Confirmation`, and do not switch the status to `Teacher Confirmation`.
+5. Ask only `Confirm upload to the tracker?` Confirmation must apply to that exact preview in the same conversation or message thread. Reconfirm after any preview change.
+6. After confirmation, update only the previewed status/latest progress and the internal source marker, then append the linked audit row. Do not change other fields opportunistically.
+7. If a tool or permission is unavailable, state that nothing was written and identify the missing access layer. Never claim success.
+
 ## Draft-First Task Writes
 
 When a user provides a new task or an update, the agent must first produce a Markdown table for review. It must not immediately write to Base.
@@ -300,8 +325,14 @@ For automatic chat reading and Base updates, verify that:
 
 - The bot is a member of the target group.
 - The bot can read and send group messages.
-- The bot or its execution identity can access and edit the Base.
+- The identity that actually performs writes has been resolved; do not assume it is the current Lark CLI app or the bot identity displayed in chat.
+- That execution identity has the required app/API authorization, Base collaborator access, and an advanced Base role that can edit `Task Register` and append `Update Log`.
+- The bot platform separately exposes a least-privilege runtime tool allowlist; sharing the Base does not grant agent tools.
 - High-impact actions still require human confirmation, including task creation, owner or deadline changes, completion, and deletion.
+
+For progress updates triggered by ordinary group members, allow only existing-task lookup, confirmed status/latest-progress updates, the internal source marker, append-only linked audit writes, and snapshot/source cleanup. Deny task creation/deletion, owner/deadline/teacher-confirmation changes, other fields, views, Workflow, and permission administration by default. Use a separate authorized workflow when broader access is genuinely required.
+
+Before declaring the bot ready, trigger the complete path from the group: read a task, return the exact preview, confirm in the same thread, update the task, and verify the linked audit row. A CLI-only test is not enough.
 
 Without a fully executable bot, use it as a reminder and fragment-capture assistant. Any authorized member can then structure the notes in Codex, review the draft, and apply the confirmed update through Lark CLI.
 

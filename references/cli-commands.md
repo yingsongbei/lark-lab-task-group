@@ -208,6 +208,26 @@ lark-cli drive permission.members create --as user --token BASE_TOKEN --type bit
   --data "@chat-edit-permission.json" --need-notification --yes --format json
 ```
 
+## Grant The Bot's Execution Identity Permission
+
+Group edit permission does not prove that the group-facing bot can write. Before granting bot access:
+
+1. Read the bots in the target chat, then inspect the bot platform or connected service to identify the app, service account, or user identity that actually performs Base calls. Do not assume it is the current CLI app.
+2. Add that execution identity as a Base collaborator with edit access.
+3. If advanced Base permissions are enabled, assign it to a role that can edit `Task Register` and append `Update Log`.
+4. Separately configure the bot runtime's tool allowlist. This policy is not a Drive/Base permission and is not created by the command above.
+
+For ordinary group progress reports, the runtime allowlist should permit only:
+
+- searching and reading existing task records;
+- updating `Status`, `Latest Progress`, and the internal `Update Source` after confirmation;
+- appending one linked `Update Log` row;
+- syncing `Status Snapshot` and clearing `Update Source`.
+
+Keep task creation/deletion, owner/deadline/teacher-confirmation changes, other fields, schema/views, Workflow, and permission administration unavailable unless a separate authorized workflow explicitly grants them. Bind each write to the exact preview confirmed in the same conversation or message thread.
+
+Finally, test through the group bot's real runtime: read one known task, preview one harmless update, confirm it, and read back both the task and linked log row. Do not treat a successful CLI-only test as proof that the bot is ready.
+
 Conservative public permission:
 
 ```json

@@ -230,7 +230,11 @@ Default model:
 3. `Update Log` write access: keep only for the Base owner, user-selected maintainers, and the bot or service account that writes audit rows.
 4. Public link sharing: use tenant-only access by default and disable external sharing unless the user explicitly asks otherwise.
 
-If the CLI cannot assign every role member in the current tenant, create the roles and table permissions with CLI where possible, then clearly tell the user which people or bots must be assigned in the Feishu/Lark UI.
+For a group-facing bot, resolve the identity that actually writes Base records. The chat bot, CLI developer app, and runtime service account may be different identities. Grant that execution identity collaborator access and, when advanced permissions are enabled, a role that can edit `Task Register` and append `Update Log`.
+
+Document access is only one permission layer. Separately configure the bot runtime's least-privilege tool allowlist. For ordinary member-triggered progress reports, allow task lookup; confirmed changes to `Status`, `Latest Progress`, and internal source/snapshot fields; and append-only linked audit writes. Deny task creation/deletion, owner/deadline/teacher-confirmation changes, schema/views, Workflow, and permission administration unless a separate authorized workflow explicitly allows them.
+
+If the CLI cannot assign every role member in the current tenant, create the roles and table permissions with CLI where possible, then clearly tell the user which people or bots must be assigned in the Feishu/Lark UI. Read one known task and perform one confirmed progress-write-plus-log test through the real group bot runtime before reporting that bot editing is ready.
 
 ## Automatic Audit Workflow
 
